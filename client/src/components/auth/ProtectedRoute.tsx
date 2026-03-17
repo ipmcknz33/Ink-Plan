@@ -1,7 +1,5 @@
-"use client";
-
-import { useEffect, type ReactNode } from "react";
-import { useLocation } from "wouter";
+import type { ReactNode } from "react";
+import { Redirect } from "wouter";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 type ProtectedRouteProps = {
@@ -10,22 +8,13 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isHydrating } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    if (isHydrating) return;
-
-    if (!isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, isHydrating, navigate]);
 
   if (isHydrating) {
     return null;
   }
 
   if (!isAuthenticated) {
-    return null;
+    return <Redirect to="/" />;
   }
 
   return <>{children}</>;

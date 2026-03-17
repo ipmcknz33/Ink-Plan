@@ -1,21 +1,36 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { sql, relations } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  integer,
+  boolean,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { users } from "./models/auth";
 
-// ============ AUTH MODELS (from Replit Auth blueprint) ============
-export * from "./models/auth";
+// Re-export auth table through shared/schema so server code imports from one place
+export { users };
+
+// App-level auth types used by storage.ts
+export type AppUser = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
 
 // ============ INKPLAN MODELS ============
 
 // User profiles - extends auth.users with InkPlan-specific data
 export const userProfiles = pgTable("user_profiles", {
-  userId: varchar("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
   displayName: text("display_name"),
   skillLevel: text("skill_level").default("Apprentice"),
   bio: text("bio"),
-  planId: text("plan_id").notNull().default("free"), // "free" or "pro"
+  planId: text("plan_id").notNull().default("free"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -33,7 +48,7 @@ export const tattooStyles = pgTable("tattoo_styles", {
   definition: text("definition").notNull(),
   rules: text("rules").array().notNull(),
   commonMistakes: text("common_mistakes").array().notNull(),
-  drills: text("drills").notNull(), // JSON string
+  drills: text("drills").notNull(),
   previewImage: text("preview_image").notNull(),
 });
 
@@ -43,20 +58,26 @@ export const tattooStylesRelations = relations(tattooStyles, ({ many }) => ({
 }));
 
 // User drawings (uploaded practice work)
-export const drawings = pgTable("drawings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => userProfiles.userId, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  styleId: varchar("style_id").references(() => tattooStyles.id),
-  imageUrl: text("image_url").notNull(),
-  notes: text("notes"),
-  isPublic: boolean("is_public").default(false),
-  isFavorite: boolean("is_favorite").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("drawings_user_id_idx").on(table.userId),
-  index("drawings_style_id_idx").on(table.styleId),
-]);
+export const drawings = pgTable(
+  "drawings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => userProfiles.userId, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    styleId: varchar("style_id").references(() => tattooStyles.id),
+    imageUrl: text("image_url").notNull(),
+    notes: text("notes"),
+    isPublic: boolean("is_public").default(false),
+    isFavorite: boolean("is_favorite").default(false),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("drawings_user_id_idx").on(table.userId),
+    index("drawings_style_id_idx").on(table.styleId),
+  ],
+);
 
 export const drawingsRelations = relations(drawings, ({ one }) => ({
   user: one(userProfiles, {
@@ -70,16 +91,22 @@ export const drawingsRelations = relations(drawings, ({ one }) => ({
 }));
 
 // User progress tracking per style
-export const userProgress = pgTable("user_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => userProfiles.userId, { onDelete: "cascade" }),
-  styleId: varchar("style_id").notNull().references(() => tattooStyles.id),
-  progressPercent: integer("progress_percent").default(0),
-  hoursPracticed: integer("hours_practiced").default(0),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  uniqueIndex("progress_user_style_idx").on(table.userId, table.styleId),
-]);
+export const userProgress = pgTable(
+  "user_progress",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => userProfiles.userId, { onDelete: "cascade" }),
+    styleId: varchar("style_id")
+      .notNull()
+      .references(() => tattooStyles.id),
+    progressPercent: integer("progress_percent").default(0),
+    hoursPracticed: integer("hours_practiced").default(0),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [uniqueIndex("progress_user_style_idx").on(table.userId, table.styleId)],
+);
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
   user: one(userProfiles, {
@@ -91,9 +118,6 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
     references: [tattooStyles.id],
   }),
 }));
-
-// Import auth models to get users table
-import { users } from "./models/auth";
 
 // ============ ZODS & TYPES ============
 
