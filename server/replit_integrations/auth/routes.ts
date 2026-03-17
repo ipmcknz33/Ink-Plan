@@ -7,14 +7,13 @@ type SessionWithUser = session.Session & {
   userId?: string;
 };
 
-type DevAuthUser = {
-  id: string;
-  email: string;
-  createdAt?: Date | string;
-};
-
-type RequestWithOptionalUser = Request & {
-  user?: DevAuthUser;
+type RequestWithSession = Request & {
+  session: SessionWithUser;
+  user?: {
+    id: string;
+    email: string;
+    createdAt?: Date | string;
+  };
 };
 
 function normalizeEmail(email: string) {
@@ -22,54 +21,44 @@ function normalizeEmail(email: string) {
 }
 
 function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /\S+@\S+\.\S+/.test(email);
 }
 
 function toSafeUser(user: { id: string; email: string; createdAt?: Date | string }) {
   return {
     id: user.id,
     email: user.email,
-    createdAt:
-      user.createdAt instanceof Date
-        ? user.createdAt.toISOString()
-        : user.createdAt,
+    createdAt: user.createdAt,
   };
 }
 
-export async function registerRoutes(app: Express) {
+export async function registerRoutes(app: Express): Promise<void> {
   app.post("/api/auth/register", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
     try {
-      const session = req.session as SessionWithUser;
-      const email = normalizeEmail(String(req.body?.email ?? ""));
-      const password = String(req.body?.password ?? "");
+      const email = normalizeEmail(String(request.body?.email ?? ""));
+      const password = String(request.body?.password ?? "");
 
       if (!email || !password) {
-        res.status(400).json({
-          error: "Email and password are required",
-        });
+        res.status(400).json({ error: "Email and password are required" });
         return;
       }
 
       if (!isValidEmail(email)) {
-        res.status(400).json({
-          error: "Please enter a valid email address",
-        });
+        res.status(400).json({ error: "Please enter a valid email" });
         return;
       }
 
       if (password.length < 6) {
-        res.status(400).json({
-          error: "Password must be at least 6 characters",
-        });
+        res.status(400).json({ error: "Password must be at least 6 characters" });
         return;
       }
 
       const existingUser = await storage.getUserByEmail(email);
 
       if (existingUser) {
-        res.status(409).json({
-          error: "An account with this email already exists",
-        });
+        res.status(409).json({ error: "An account with this email already exists" });
         return;
       }
 
@@ -80,94 +69,85 @@ export async function registerRoutes(app: Express) {
         passwordHash,
       });
 
-      session.userId = user.id;
+      request.session.userId = user.id;
 
       res.status(201).json({
         user: toSafeUser(user),
       });
     } catch (error) {
       console.error("Register error:", error);
-
-      res.status(500).json({
-        error: "Failed to register user",
-      });
+      res.status(500).json({ error: "Failed to register user" });
     }
   });
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
     try {
-      const session = req.session as SessionWithUser;
-      const email = normalizeEmail(String(req.body?.email ?? ""));
-      const password = String(req.body?.password ?? "");
+      const email = normalizeEmail(String(request.body?.email ?? ""));
+      const password = String(request.body?.password ?? "");
 
       if (!email || !password) {
-        res.status(400).json({
-          error: "Email and password are required",
-        });
+        res.status(400).json({ error: "Email and password are required" });
         return;
       }
 
       const user = await storage.getUserByEmail(email);
 
       if (!user) {
-        res.status(401).json({
-          error: "Invalid email or password",
-        });
+        res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
-      const passwordMatches = await bcrypt.compare(password, user.passwordHash);
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
-      if (!passwordMatches) {
-        res.status(401).json({
-          error: "Invalid email or password",
-        });
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
-      session.userId = user.id;
+      request.session.userId = user.id;
 
       res.status(200).json({
         user: toSafeUser(user),
       });
     } catch (error) {
       console.error("Login error:", error);
-
-      res.status(500).json({
-        error: "Failed to log in",
-      });
+      res.status(500).json({ error: "Failed to log in" });
     }
   });
 
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
+    request.session.destroy((destroyError) => {
+      if (destroyError) {
+        console.error("Logout error:", destroyError);
+        res.status(500).json({ error: "Failed to log out" });
+        return;
+      }
+
+      res.clearCookie("connect.sid");
+      res.status(200).json({ message: "Logged out successfully" });
+    });
+  });
+
   app.get("/api/auth/me", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
     try {
-      const session = req.session as SessionWithUser;
-      const requestWithUser = req as RequestWithOptionalUser;
+      const userId = request.session.userId;
 
-      if (requestWithUser.user?.id && requestWithUser.user?.email) {
-        res.status(200).json({
-          user: toSafeUser(requestWithUser.user),
-        });
+      if (!userId) {
+        res.status(401).json({ error: "Not authenticated" });
         return;
       }
 
-      const sessionUserId = session.userId;
-
-      if (!sessionUserId) {
-        res.status(401).json({
-          error: "Not authenticated",
-        });
-        return;
-      }
-
-      const user = await storage.getUserById(sessionUserId);
+      const user = await storage.getUserById(userId);
 
       if (!user) {
-        session.userId = undefined;
-
-        res.status(401).json({
-          error: "Not authenticated",
-        });
+        request.session.userId = undefined;
+        res.status(401).json({ error: "Not authenticated" });
         return;
       }
 
@@ -175,11 +155,8 @@ export async function registerRoutes(app: Express) {
         user: toSafeUser(user),
       });
     } catch (error) {
-      console.error("Auth me error:", error);
-
-      res.status(500).json({
-        error: "Failed to verify auth session",
-      });
+      console.error("Get current user error:", error);
+      res.status(500).json({ error: "Failed to fetch current user" });
     }
   });
 }

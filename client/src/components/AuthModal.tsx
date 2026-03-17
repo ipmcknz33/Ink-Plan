@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 import { useAuth, type AuthUser } from "@/components/providers/AuthProvider";
 
 type AuthMode = "signin" | "signup";
@@ -20,7 +22,7 @@ type AuthResponseShape = {
 };
 
 function extractUser(data: AuthResponseShape): AuthUser | null {
-  if (data.user && data.user.id && data.user.email) {
+  if (data.user?.id && data.user?.email) {
     return data.user;
   }
 
@@ -37,6 +39,7 @@ function extractUser(data: AuthResponseShape): AuthUser | null {
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
   const { login } = useAuth();
+  const [, navigate] = useLocation();
 
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
@@ -49,153 +52,152 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (submitting) return;
-
     setSubmitting(true);
     setError("");
 
     try {
       const endpoint =
-        mode === "signup" ? "/api/auth/register" : "/api/auth/login";
-
-      const normalizedEmail = email.trim().toLowerCase();
+        mode === "signin" ? "/api/auth/login" : "/api/auth/register";
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
-          email: normalizedEmail,
+          email,
           password,
         }),
       });
 
-      const data: AuthResponseShape = await response.json();
+      const data = (await response.json()) as AuthResponseShape;
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || "Authentication failed");
+        setError(data.error || data.message || "Authentication failed");
+        return;
       }
 
       const user = extractUser(data);
 
       if (!user) {
-        throw new Error("Auth succeeded but no user payload was returned");
+        setError("Authentication succeeded, but no user was returned");
+        return;
       }
 
       login(user);
-
-      setEmail("");
-      setPassword("");
-      setError("");
-      setMode("signin");
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Auth error:", error);
+      setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
+  function handleClose() {
+    if (submitting) return;
+    setError("");
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <button
           type="button"
-          onClick={onClose}
-          disabled={submitting}
-          className="absolute right-4 top-4 text-neutral-500 transition hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={handleClose}
+          className="absolute right-4 top-4 text-gray-500 hover:text-black"
           aria-label="Close auth modal"
         >
           <X size={20} />
         </button>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-900">
-            {mode === "signup" ? "Create your account" : "Welcome back"}
+          <h2 className="text-2xl font-bold text-black">
+            {mode === "signin" ? "Sign In" : "Create Account"}
           </h2>
-          <p className="mt-2 text-sm text-neutral-600">
-            {mode === "signup"
-              ? "Create an InkPlan account to save your progress."
-              : "Sign in to continue to InkPlan."}
+          <p className="mt-2 text-sm text-gray-600">
+            {mode === "signin"
+              ? "Log in to continue into InkPlan."
+              : "Create your InkPlan account to get started."}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="auth-email"
-              className="mb-1 block text-sm font-medium text-neutral-700"
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-black"
             >
               Email
             </label>
             <input
-              id="auth-email"
+              id="email"
               type="email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              placeholder="Enter your email"
               required
-              className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none transition focus:border-neutral-900"
-              placeholder="you@example.com"
             />
           </div>
 
           <div>
             <label
-              htmlFor="auth-password"
-              className="mb-1 block text-sm font-medium text-neutral-700"
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-black"
             >
               Password
             </label>
             <input
-              id="auth-password"
+              id="password"
               type="password"
               autoComplete={
-                mode === "signup" ? "new-password" : "current-password"
+                mode === "signin" ? "current-password" : "new-password"
               }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none transition focus:border-neutral-900"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
               placeholder="Enter your password"
+              required
             />
           </div>
 
           {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           ) : null}
 
-          <Button
+          <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl"
+            className="w-full rounded-xl bg-black px-4 py-3 text-white transition hover:opacity-90 disabled:opacity-50"
           >
             {submitting
-              ? mode === "signup"
-                ? "Creating account..."
-                : "Signing in..."
-              : mode === "signup"
-                ? "Create account"
-                : "Sign in"}
-          </Button>
+              ? mode === "signin"
+                ? "Signing In..."
+                : "Creating Account..."
+              : mode === "signin"
+                ? "Sign In"
+                : "Create Account"}
+          </button>
         </form>
 
-        <div className="mt-4 text-center text-sm text-neutral-600">
-          {mode === "signup" ? "Already have an account?" : "Need an account?"}{" "}
+        <div className="mt-4 text-center text-sm text-gray-600">
+          {mode === "signin" ? "Need an account?" : "Already have an account?"}{" "}
           <button
             type="button"
-            disabled={submitting}
             onClick={() => {
+              setMode(mode === "signin" ? "signup" : "signin");
               setError("");
-              setMode(mode === "signup" ? "signin" : "signup");
             }}
-            className="font-medium text-neutral-900 underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="font-semibold text-black underline"
           >
-            {mode === "signup" ? "Sign in" : "Create one"}
+            {mode === "signin" ? "Create one" : "Sign in"}
           </button>
         </div>
       </div>
