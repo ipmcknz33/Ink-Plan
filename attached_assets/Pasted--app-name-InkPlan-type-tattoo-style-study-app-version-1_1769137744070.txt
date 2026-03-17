@@ -1,0 +1,290 @@
+{
+  "app": {
+    "name": "InkPlan",
+    "type": "tattoo_style_study_app",
+    "version": "1.0.0-mvp",
+    "tagline": "Master tattoo styles through structured practice.",
+    "primaryAudience": ["apprentice_tattoo_artists", "working_tattoo_artists"],
+    "pillars": [
+      "Style rules and definitions",
+      "Perfect execution examples",
+      "Step-by-step lessons",
+      "Timed practice drills",
+      "Cloud drawing library",
+      "Optional public portfolio"
+    ],
+    "deploymentTargets": ["replit", "github"]
+  },
+  "plans": {
+    "free": {
+      "id": "free",
+      "label": "Free",
+      "limits": {
+        "savedDrawingsMax": 15,
+        "stylesUnlocked": "limited",
+        "lessonsUnlocked": "intro_only",
+        "templatesDownload": false,
+        "publicPortfolio": false,
+        "cloudBackup": true
+      }
+    },
+    "pro": {
+      "id": "pro",
+      "label": "Pro",
+      "limits": {
+        "savedDrawingsMax": "unlimited",
+        "stylesUnlocked": "all",
+        "lessonsUnlocked": "all",
+        "templatesDownload": true,
+        "publicPortfolio": true,
+        "cloudBackup": true
+      }
+    }
+  },
+  "routes": [
+    { "path": "/", "pageId": "landing" },
+    { "path": "/register", "pageId": "register" },
+    { "path": "/login", "pageId": "login" },
+    { "path": "/dashboard", "pageId": "dashboard", "protected": true },
+    { "path": "/styles", "pageId": "styles" },
+    { "path": "/styles/:styleId", "pageId": "styleDetail" },
+    { "path": "/styles/:styleId/lesson/:lessonId", "pageId": "lesson", "protected": true },
+    { "path": "/practice", "pageId": "practice", "protected": true },
+    { "path": "/library", "pageId": "drawingLibrary", "protected": true },
+    { "path": "/library/upload", "pageId": "uploadDrawing", "protected": true },
+    { "path": "/portfolio/:username", "pageId": "publicPortfolio" },
+    { "path": "/upgrade", "pageId": "upgrade" }
+  ],
+  "auth": {
+    "enabled": true,
+    "methods": ["email_password"],
+    "profileFields": [
+      "displayName",
+      "email",
+      "username",
+      "skillLevel",
+      "bio",
+      "avatarUrl",
+      "favoriteStyleIds",
+      "planId"
+    ]
+  },
+  "database": {
+    "provider": "firebase",
+    "collections": {
+      "users": {
+        "docId": "uid",
+        "fields": {
+          "uid": "string",
+          "displayName": "string",
+          "email": "string",
+          "username": "string",
+          "skillLevel": "string",
+          "bio": "string",
+          "avatarUrl": "string",
+          "favoriteStyleIds": "array<string>",
+          "planId": "string",
+          "createdAt": "timestamp",
+          "updatedAt": "timestamp"
+        }
+      },
+      "drawings": {
+        "docId": "auto",
+        "fields": {
+          "uid": "string",
+          "title": "string",
+          "styleId": "string",
+          "subject": "string",
+          "tags": "array<string>",
+          "notes": "string",
+          "selfRating": "number",
+          "imageUrl": "string",
+          "storagePath": "string",
+          "isFavorite": "boolean",
+          "isPublic": "boolean",
+          "createdAt": "timestamp",
+          "updatedAt": "timestamp"
+        },
+        "indexes": [
+          ["uid", "createdAt"],
+          ["uid", "styleId", "createdAt"],
+          ["isPublic", "createdAt"]
+        ]
+      },
+      "progress": {
+        "docId": "auto",
+        "fields": {
+          "uid": "string",
+          "styleId": "string",
+          "lessonId": "string",
+          "status": "string",
+          "timeSpentMinutes": "number",
+          "completedAt": "timestamp",
+          "updatedAt": "timestamp"
+        },
+        "indexes": [
+          ["uid", "styleId"],
+          ["uid", "lessonId"]
+        ]
+      },
+      "styles": {
+        "docId": "styleId",
+        "adminOnlyWrites": true,
+        "fields": {
+          "styleId": "string",
+          "name": "string",
+          "tags": "array<string>",
+          "definition": "string",
+          "rules": "array<string>",
+          "perfectExecution": "array<object>",
+          "commonMistakes": "array<string>",
+          "lessonIds": "array<string>",
+          "drills": "array<object>"
+        }
+      },
+      "lessons": {
+        "docId": "lessonId",
+        "adminOnlyWrites": true,
+        "fields": {
+          "lessonId": "string",
+          "styleId": "string",
+          "title": "string",
+          "tier": "string",
+          "sections": "array<object>",
+          "practicePrompts": "array<string>",
+          "templateDownloads": "array<object>"
+        }
+      }
+    },
+    "storage": {
+      "provider": "firebase_storage",
+      "paths": {
+        "drawings": "users/{uid}/drawings/{drawingId}.jpg",
+        "avatars": "users/{uid}/avatar.jpg"
+      }
+    },
+    "securityRulesSummary": [
+      "Users can read/write their own user doc",
+      "Users can read/write their own drawings and progress",
+      "Public drawings (isPublic=true) are readable by anyone",
+      "Only admin can write styles/lessons content"
+    ]
+  },
+  "ui": {
+    "navigation": {
+      "links": [
+        { "label": "Styles", "to": "/styles" },
+        { "label": "Practice", "to": "/practice" },
+        { "label": "Library", "to": "/library" },
+        { "label": "Dashboard", "to": "/dashboard" }
+      ],
+      "cta": { "label": "Upload Drawing", "to": "/library/upload" }
+    },
+    "components": {
+      "styleCard": ["name", "tags", "difficulty", "previewImage"],
+      "perfectExecutionBlock": ["exampleImage", "breakdownChecklist", "notes"],
+      "drillCard": ["title", "minutes", "prompt", "startTimer"],
+      "drawingCard": ["image", "title", "style", "favoriteToggle", "publicToggle"]
+    }
+  },
+  "gating": {
+    "rules": [
+      {
+        "feature": "save_drawings",
+        "free": { "max": 15 },
+        "pro": { "max": "unlimited" }
+      },
+      {
+        "feature": "lessons_access",
+        "free": { "tier": "intro_only" },
+        "pro": { "tier": "all" }
+      },
+      {
+        "feature": "public_portfolio",
+        "free": false,
+        "pro": true
+      },
+      {
+        "feature": "template_downloads",
+        "free": false,
+        "pro": true
+      }
+    ],
+    "upgradeFlow": {
+      "mvp": "unlock_pro_locally_or_db_flag",
+      "v1": "stripe_subscription"
+    }
+  },
+  "contentSeed": {
+    "styles": [
+      {
+        "styleId": "american_traditional",
+        "name": "American Traditional",
+        "tags": ["traditional", "bold", "color"],
+        "definition": "Bold outlines, limited palette, high contrast, classic flash motifs.",
+        "rules": [
+          "Bold linework with consistent weight",
+          "Readable silhouette from a distance",
+          "Limited classic palette",
+          "Solid black shadows and simple shading"
+        ],
+        "perfectExecution": [
+          {
+            "title": "Perfect Execution Example 1",
+            "imageUrl": "",
+            "checklist": [
+              "Crisp bold outline",
+              "Strong silhouette",
+              "High contrast",
+              "Palette stays classic"
+            ],
+            "notes": "Prioritize readability and clean line control."
+          }
+        ],
+        "commonMistakes": [
+          "Lines too thin",
+          "Too many colors",
+          "Over-rendered shading",
+          "Weak silhouette"
+        ],
+        "lessonIds": ["at_intro_01"],
+        "drills": [
+          { "title": "5-min line control", "minutes": 5, "prompt": "Draw 20 consistent-weight lines + 10 clean curves." },
+          { "title": "10-min flash build", "minutes": 10, "prompt": "Create a simple rose silhouette + bold outline + 2 shadow zones." }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "lessonId": "at_intro_01",
+        "styleId": "american_traditional",
+        "title": "American Traditional: Foundations",
+        "tier": "intro",
+        "sections": [
+          { "type": "overview", "content": "What defines American Traditional and how to keep it readable." },
+          { "type": "tools", "content": "Suggested liners/shaders for practice; pencil/pen equivalents." },
+          { "type": "step_by_step", "content": "Silhouette → outline → shadow shapes → color blocks." },
+          { "type": "do_dont", "content": "Do: bold lines + simple values. Don’t: over-render." }
+        ],
+        "practicePrompts": [
+          "Draw 5 roses with identical outline weight",
+          "Make 10 dagger silhouettes and choose the cleanest 3"
+        ],
+        "templateDownloads": [
+          { "label": "Flash grid", "url": "", "proOnly": true }
+        ]
+      }
+    ]
+  },
+  "acceptanceCriteria": {
+    "mvp": [
+      "User can register/login/logout",
+      "User profile stored in users collection",
+      "User can browse styles and open a style detail",
+      "Style detail shows rules, perfect execution, mistakes, lessons, drills",
+      "User can upload a drawing image and it appears in their library",
+      "Free users are blocked after 15 drawing saves",
+      "Pro users can mark drawings public and portfolio page shows them"
+    ]
+  }
+}

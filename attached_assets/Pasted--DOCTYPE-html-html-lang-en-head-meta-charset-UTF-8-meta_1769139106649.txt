@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InkPlan</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/b4c4fba401.js" crossorigin="anonymous"></script>
+</head>
+<body>
+ <section id="landing-page"></section>
+<nav>
+   <figure class="spinning-cube" aria-label="spinning logo cube">
+    <div class="cube-container">
+        <div class="cube">
+
+            <div class="face front"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+            <div class="face back"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+            <div class="face right"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+            <div class="face left"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+            <div class="face top"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+            <div class="face bottom"><img src="InkPlan-logo.jpg" alt="InkPlan Logo" /></div>
+
+        </div>
+    </div>
+</figure>
+    
+    <ul class="nav-links-list">
+<li class="nav__link">
+    <a href="#" class="nav__link--anchor
+    link__hover-effect
+    link__hover-effect--black
+        ">Designs</a></li>
+<li class="nav__link">
+    <a href="ai-box" class="nav__link--anchor
+    link__hover-effect
+    link__hover-effect--black
+        ">AI Help</a></li>
+<li class="nav__link">
+    <a href="#" class="nav__link--anchor
+    link__hover-effect
+    link__hover-effect--black
+        ">Tattoo Styles</a></li>
+<li class="nav__link">
+    <a href="#" class="nav__link--anchor
+    link__hover-effect
+    link__hover-effect--black
+        ">How to Draw</a></li>
+<li class="nav__link">
+     <a href="# " class="nav__link--anchor
+      link__hover-effect
+      link__hover-effect--black
+      ">Contact</a>
+</li>
+
+<li class="nav__link click">
+     <a href="# " class="nav__link--anchor
+     link__hover-effect
+     link__hover-effect--black
+    "><i class="fa-solid fa-circle-half-stroke"></i></a>
+    </li>
+</ul>
+</nav>
+
+<header class="header">
+   
+    <div class="header-content">
+        <h1 class="title">Ink<span class="blue">Plan</span></h1>
+        <h2 class="greeting-title">Hello,<br>
+            I am <span class="blue">MR MeSeeks</span></h2>
+    </div>
+        <p class="header__para">Your Ultimate Tattoo Design Companion</p>
+        <div class="social__list">
+           <a href="#" class="social__link click"><i class="fa-brands fa-instagram"></i></a>
+           <a href="#" class="social__link click"><i class="fa-brands fa-facebook-f"></i></a>
+           <a href="#" class="social__link click"><i class="fa-brands fa-twitter"></i></a>
+           <a href="#" class="social__link click"><i class="fa-brands fa-pinterest-p"></i></a>
+        </div>
+        </header>
+        <!--
+        
+        MAIN PAGE SECTION 
+        
+        -->
+        <section id="main-page">
+            <div class="container"></div>
+            <div class="row">
+            <h2 class="section__title">Unleash Your Creativity
+            </h2>
+            <h3 class="main-page--sub-title">
+                Discover Unique Tattoo Designs
+            </h3>
+            <div class="main__wrapper">
+                <img src="landingpage-bg.jpg" style="width:100%;height:100%;object-fit:cover;" class="main-page-img"/>
+                <div class="main-page--bg"></div>
+                <div class="main-page--description">
+                <p class="main-page--para">
+                    Dynamic tattoo inspirations designed just for you
+                </p>
+                <!-- AI DESIGN AREA -->
+                <div class="ai-box" id="ai">
+                    <h2>Generate Your Tattoo Idea</h2>
+                    <textarea class="textarea" placeholder="Describe your idea..."></textarea>
+                    <input type="file" accept="image/*" class="upload-btn click"/>
+                    <button class="ai-btn click">Generate Concept</button>
+                </div>
+                    
+                </div>
+            </div>
+                
+        </div>
+    </section>
+   <!-- TATTOO STYLES SECTION -->
+<section id="tattoo-styles" >
+  <div class="container"></div>
+  <div class="row"></div>
+  <div class="tattoo-styles-section">
+    <header class="tattoo-styles-header">
+    <h2>Explore Tattoo Styles</h2>
+    <img src="tattoostyles-bg.jpg" alt="tattoostyles-bg" class="tattoo-styles-bg"/>
+    <p>Scroll through classic and modern tattoo styles. Tap a style to see visual examples.</p>
+  </header>
+
+  <!-- Quick in-page navigation -->
+  <nav class="styles-nav">
+    <ul>
+      <li><a href="#style-american-traditional">American Traditional</a></li>
+      <li><a href="#style-neo-traditional">Neo-Traditional</a></li>
+      <li><a href="#style-realism">Realism</a></li>
+      <li><a href="#style-black-gray">Black &amp; Gray</a></li>
+      <li><a href="#style-japanese">Japanese (Irezumi)</a></li>
+      <li><a href="#style-tribal">Tribal &amp; Polynesian</a></li>
+      <li><a href="#style-watercolor">Watercolor</a></li>
+      <li><a href="#style-new-school">New School</a></li>
+      <li><a href="#style-geometric">Geometric</a></li>
+      <li><a href="#style-dotwork">Dotwork</a></li>
+      <li><a href="#style-fine-line">Fine Line &amp; Minimalist</a></li>
+      <li><a href="#style-illustrative">Illustrative</a></li>
+      <li><a href="#style-chicano">Chicano</a></li>
+      <li><a href="#style-biomechanical">Biomechanical</a></li>
+    </ul>
+  </nav>
+
+  <div class="styles-grid">
+
+    <!-- 1. AMERICAN TRADITIONAL -->
+    <section class="tattoo-style" id="style-american-traditional">
+      <h3>American Traditional (Old School)</h3>
+      <p class="style-description">
+        Bold black outlines, a limited high-contrast color palette (red, yellow, green, black),
+        and classic sailor imagery like anchors, swallows, roses, daggers, and pin-ups.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Bold lines</span>
+        <span class="style-tag">High contrast</span>
+        <span class="style-tag">Flash sheets</span>
+      </div>
+      <div class="style-gallery">
+        <!-- Replace src with real image URLs you have rights to use -->
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/american-traditional-1.jpg"
+               alt="American traditional anchor and swallow tattoo">
+          <figcaption>Anchor &amp; swallow flash</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/american-traditional-2.jpg"
+               alt="American traditional rose tattoo">
+          <figcaption>Classic rose</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/american-traditional-3.jpg"
+               alt="American traditional pin-up girl tattoo">
+          <figcaption>Pin-up girl</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/american-traditional-4.jpg"
+               alt="American traditional dagger through heart tattoo">
+          <figcaption>Dagger &amp; heart</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/american-traditional-5.jpg"
+               alt="American traditional eagle tattoo">
+          <figcaption>Patriotic eagle</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 2. NEO-TRADITIONAL -->
+    <section class="tattoo-style" id="style-neo-traditional">
+      <h3>Neo-Traditional</h3>
+      <p class="style-description">
+        Evolves American Traditional with richer color palettes, more shading, ornate details,
+        and influences from Art Nouveau and Art Deco. Often used for portraits, animals, and florals.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Decorative</span>
+        <span class="style-tag">Rich color</span>
+        <span class="style-tag">Ornamental linework</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/neo-traditional-1.jpg"
+               alt="Neo-traditional fox tattoo with ornate frame">
+          <figcaption>Framed animal portrait</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/neo-traditional-2.jpg"
+               alt="Neo-traditional woman portrait tattoo">
+          <figcaption>Woman portrait</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/neo-traditional-3.jpg"
+               alt="Neo-traditional floral tattoo">
+          <figcaption>Layered florals</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/neo-traditional-4.jpg"
+               alt="Neo-traditional dagger and rose tattoo">
+          <figcaption>Dagger &amp; roses</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/neo-traditional-5.jpg"
+               alt="Neo-traditional animal and jewel tattoo">
+          <figcaption>Jewels &amp; animals</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 3. REALISM -->
+    <section class="tattoo-style" id="style-realism">
+      <h3>Realism</h3>
+      <p class="style-description">
+        Focuses on lifelike detail, accurate shading, and depth to mimic photos or paintings.
+        Can be done in full color or black &amp; gray, often used for portraits and nature scenes.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Photo-real</span>
+        <span class="style-tag">Portraits</span>
+        <span class="style-tag">High detail</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/realism-1.jpg"
+               alt="Realistic human portrait tattoo">
+          <figcaption>Portrait realism</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/realism-2.jpg"
+               alt="Realistic lion tattoo">
+          <figcaption>Animal realism</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/realism-3.jpg"
+               alt="Realistic rose tattoo">
+          <figcaption>Floral realism</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/realism-4.jpg"
+               alt="Realistic nature landscape tattoo">
+          <figcaption>Landscape scene</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/realism-5.jpg"
+               alt="Realistic skull tattoo">
+          <figcaption>Skull &amp; anatomy</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 4. BLACK & GRAY -->
+    <section class="tattoo-style" id="style-black-gray">
+      <h3>Black &amp; Gray</h3>
+      <p class="style-description">
+        Uses only black ink diluted to create smooth gradients of gray.
+        Popular for portraits, religious imagery, and Chicano-inspired pieces.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Monochrome</span>
+        <span class="style-tag">Soft shading</span>
+        <span class="style-tag">Classic look</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/black-gray-1.jpg"
+               alt="Black and gray portrait tattoo">
+          <figcaption>Portrait shading</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/black-gray-2.jpg"
+               alt="Black and gray religious tattoo">
+          <figcaption>Religious motifs</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/black-gray-3.jpg"
+               alt="Black and gray angel tattoo">
+          <figcaption>Angels &amp; cherubs</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/black-gray-4.jpg"
+               alt="Black and gray sleeve tattoo">
+          <figcaption>Full sleeve</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/black-gray-5.jpg"
+               alt="Black and gray statue tattoo">
+          <figcaption>Statue realism</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 5. JAPANESE (IREZUMI) -->
+    <section class="tattoo-style" id="style-japanese">
+      <h3>Japanese (Irezumi)</h3>
+      <p class="style-description">
+        Large-scale body pieces with flowing compositions, mythological creatures,
+        koi, tigers, samurai, masks, and florals like peonies and cherry blossoms.
+        Heavy linework and rich color with strong use of negative space.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Full body suits</span>
+        <span class="style-tag">Myth &amp; folklore</span>
+        <span class="style-tag">Storytelling</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/japanese-1.jpg"
+               alt="Japanese dragon back piece tattoo">
+          <figcaption>Dragon back piece</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/japanese-2.jpg"
+               alt="Japanese koi fish sleeve tattoo">
+          <figcaption>Koi sleeve</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/japanese-3.jpg"
+               alt="Japanese tiger tattoo">
+          <figcaption>Tiger &amp; waves</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/japanese-4.jpg"
+               alt="Japanese oni mask tattoo">
+          <figcaption>Oni mask</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/japanese-5.jpg"
+               alt="Japanese cherry blossom tattoo">
+          <figcaption>Cherry blossoms</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 6. TRIBAL & POLYNESIAN -->
+    <section class="tattoo-style" id="style-tribal">
+      <h3>Tribal &amp; Polynesian</h3>
+      <p class="style-description">
+        Bold black patterns built from lines, curves, and symbolic motifs,
+        often wrapping the body. Includes Polynesian, Maori, Samoan, and other indigenous styles.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Pattern heavy</span>
+        <span class="style-tag">Cultural</span>
+        <span class="style-tag">Blackwork</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/tribal-1.jpg"
+               alt="Polynesian shoulder tattoo">
+          <figcaption>Polynesian shoulder</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/tribal-2.jpg"
+               alt="Maori forearm tattoo">
+          <figcaption>Maori forearm</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/tribal-3.jpg"
+               alt="Tribal sleeve tattoo">
+          <figcaption>Tribal sleeve</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/tribal-4.jpg"
+               alt="Tribal leg tattoo">
+          <figcaption>Leg patterns</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/tribal-5.jpg"
+               alt="Tribal chest tattoo">
+          <figcaption>Chest panel</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 7. WATERCOLOR -->
+    <section class="tattoo-style" id="style-watercolor">
+      <h3>Watercolor</h3>
+      <p class="style-description">
+        Mimics watercolor painting with soft gradients, splashes, drips,
+        and minimal black outlines. Often layered over line art or silhouettes.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Painterly</span>
+        <span class="style-tag">Soft edges</span>
+        <span class="style-tag">Color splashes</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/watercolor-1.jpg"
+               alt="Watercolor flower tattoo">
+          <figcaption>Floral wash</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/watercolor-2.jpg"
+               alt="Watercolor bird tattoo">
+          <figcaption>Bird in flight</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/watercolor-3.jpg"
+               alt="Watercolor skyline tattoo">
+          <figcaption>Skyline splatter</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/watercolor-4.jpg"
+               alt="Watercolor abstract tattoo">
+          <figcaption>Abstract color</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/watercolor-5.jpg"
+               alt="Watercolor animal tattoo">
+          <figcaption>Animal silhouette</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 8. NEW SCHOOL -->
+    <section class="tattoo-style" id="style-new-school">
+      <h3>New School</h3>
+      <p class="style-description">
+        Cartoonish exaggeration, heavy outlines, and neon-bright colors.
+        Influenced by graffiti, comics, and pop culture with wild, playful compositions.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Cartoon</span>
+        <span class="style-tag">High saturation</span>
+        <span class="style-tag">Pop culture</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/new-school-1.jpg"
+               alt="New school cartoon character tattoo">
+          <figcaption>Cartoon character</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/new-school-2.jpg"
+               alt="New school animal tattoo">
+          <figcaption>Animated animal</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/new-school-3.jpg"
+               alt="New school graffiti-style tattoo">
+          <figcaption>Graffiti vibes</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/new-school-4.jpg"
+               alt="New school food character tattoo">
+          <figcaption>Goofy food</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/new-school-5.jpg"
+               alt="New school skull tattoo">
+          <figcaption>Wild skull</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 9. GEOMETRIC -->
+    <section class="tattoo-style" id="style-geometric">
+      <h3>Geometric</h3>
+      <p class="style-description">
+        Built from lines, shapes, mandalas, and sacred geometry.
+        Often symmetrical and combined with animals or abstract forms.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Lines &amp; shapes</span>
+        <span class="style-tag">Mandalas</span>
+        <span class="style-tag">Symmetry</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/geometric-1.jpg"
+               alt="Geometric wolf tattoo">
+          <figcaption>Geometric wolf</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/geometric-2.jpg"
+               alt="Geometric mandala tattoo">
+          <figcaption>Mandala pattern</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/geometric-3.jpg"
+               alt="Geometric sleeve tattoo">
+          <figcaption>Full sleeve pattern</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/geometric-4.jpg"
+               alt="Geometric abstract shapes tattoo">
+          <figcaption>Abstract geometry</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/geometric-5.jpg"
+               alt="Geometric sacred geometry tattoo">
+          <figcaption>Sacred geometry</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 10. DOTWORK -->
+    <section class="tattoo-style" id="style-dotwork">
+      <h3>Dotwork</h3>
+      <p class="style-description">
+        Uses dots instead of solid shading to build gradients, patterns, and depth.
+        Common in mandalas, geometric pieces, and surreal designs.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Stippling</span>
+        <span class="style-tag">Gradients</span>
+        <span class="style-tag">Patterns</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/dotwork-1.jpg"
+               alt="Dotwork mandala tattoo">
+          <figcaption>Mandala dotwork</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/dotwork-2.jpg"
+               alt="Dotwork animal skull tattoo">
+          <figcaption>Skull &amp; nature</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/dotwork-3.jpg"
+               alt="Dotwork geometric tattoo">
+          <figcaption>Geometric dots</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/dotwork-4.jpg"
+               alt="Dotwork landscape tattoo">
+          <figcaption>Landscape scene</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/dotwork-5.jpg"
+               alt="Dotwork sacred geometry tattoo">
+          <figcaption>Sacred symbols</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 11. FINE LINE & MINIMALIST -->
+    <section class="tattoo-style" id="style-fine-line">
+      <h3>Fine Line &amp; Minimalist</h3>
+      <p class="style-description">
+        Very thin lines, subtle shading, and simplified designs.
+        Great for small symbols, delicate florals, and understated pieces.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Delicate</span>
+        <span class="style-tag">Low contrast</span>
+        <span class="style-tag">Subtle</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/fine-line-1.jpg"
+               alt="Fine line flower tattoo">
+          <figcaption>Single-stem flower</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/fine-line-2.jpg"
+               alt="Fine line script tattoo">
+          <figcaption>Word / script</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/fine-line-3.jpg"
+               alt="Fine line constellation tattoo">
+          <figcaption>Constellation</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/fine-line-4.jpg"
+               alt="Fine line single-line face tattoo">
+          <figcaption>Single-line face</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/fine-line-5.jpg"
+               alt="Fine line small symbol tattoo">
+          <figcaption>Mini symbols</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 12. ILLUSTRATIVE -->
+    <section class="tattoo-style" id="style-illustrative">
+      <h3>Illustrative</h3>
+      <p class="style-description">
+        Combines elements of drawing, etching, comics, and fine art.
+        Can lean sketchy or graphic, often mixing blackwork with selective color.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Art-driven</span>
+        <span class="style-tag">Mixed techniques</span>
+        <span class="style-tag">Storybook</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/illustrative-1.jpg"
+               alt="Illustrative animal tattoo">
+          <figcaption>Storybook animal</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/illustrative-2.jpg"
+               alt="Illustrative figure tattoo">
+          <figcaption>Figure drawing</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/illustrative-3.jpg"
+               alt="Illustrative floral tattoo">
+          <figcaption>Botanical sketch</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/illustrative-4.jpg"
+               alt="Illustrative surreal tattoo">
+          <figcaption>Surreal scene</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/illustrative-5.jpg"
+               alt="Illustrative blackwork tattoo">
+          <figcaption>Heavy black lines</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 13. CHICANO -->
+    <section class="tattoo-style" id="style-chicano">
+      <h3>Chicano</h3>
+      <p class="style-description">
+        Rooted in Chicano culture and black &amp; gray realism.
+        Features script, lowriders, religious imagery, portraits, clowns, and neighborhood symbolism.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">Black &amp; gray</span>
+        <span class="style-tag">Lettering</span>
+        <span class="style-tag">Cultural roots</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/chicano-1.jpg"
+               alt="Chicano script tattoo">
+          <figcaption>Chicano script</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/chicano-2.jpg"
+               alt="Chicano clown girl tattoo">
+          <figcaption>Clown girl</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/chicano-3.jpg"
+               alt="Chicano religious tattoo">
+          <figcaption>Religious piece</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/chicano-4.jpg"
+               alt="Chicano lowrider tattoo">
+          <figcaption>Lowrider car</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/chicano-5.jpg"
+               alt="Chicano hands praying tattoo">
+          <figcaption>Praying hands</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 14. BIOMECHANICAL -->
+    <section class="tattoo-style" id="style-biomechanical">
+      <h3>Biomechanical</h3>
+      <p class="style-description">
+        Imagines the body as a mix of flesh and machinery,
+        with torn-skin effects revealing gears, pistons, and alien tech underneath.
+      </p>
+      <div class="style-tags">
+        <span class="style-tag">3D illusion</span>
+        <span class="style-tag">Sci-fi</span>
+        <span class="style-tag">Organic + machine</span>
+      </div>
+      <div class="style-gallery">
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/biomech-1.jpg"
+               alt="Biomechanical arm tattoo">
+          <figcaption>Exposed mechanics</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/biomech-2.jpg"
+               alt="Biomechanical shoulder tattoo">
+          <figcaption>Shoulder plate</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/biomech-3.jpg"
+               alt="Biomechanical leg tattoo">
+          <figcaption>Leg machinery</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/biomech-4.jpg"
+               alt="Biomechanical spine tattoo">
+          <figcaption>Spinal column</figcaption>
+        </figure>
+        <figure class="style-example">
+          <img src="https://your-cdn.com/images/biomech-5.jpg"
+               alt="Biomechanical chest tattoo">
+          <figcaption>Chest panel</figcaption>
+        </figure>
+      </div>
+    </section>
+
+  </div>
+</section>
+
+<!-- DESIGN VAULT / SAVED REFERENCES SECTION -->
+<section id="design-vault">
+  <div class="container">
+    <div class="row">
+      <div class="design-vault-section">
+        <header class="design-vault-header">
+          <h2>Design Vault</h2>
+          <p>Save and organize your reference images, uploads, and AI-generated concepts in one place.</p>
+        </header>
+
+        <!-- Toolbar: filters + search + upload -->
+        <div class="design-toolbar">
+          <div class="design-filters">
+            <button class="design-filter-btn active click" data-filter="all">All</button>
+            <button class="design-filter-btn click" data-filter="reference">References</button>
+            <button class="design-filter-btn click" data-filter="upload">Uploads</button>
+            <button class="design-filter-btn click" data-filter="ai">AI Concepts</button>
+            <button class="design-filter-btn click" data-filter="favorite">Favorites</button>
+          </div>
+
+          <div class="design-actions">
+            <div class="design-search">
+              <input 
+                type="text" 
+                class="design-search-input" 
+                placeholder="Search by keyword, style, or artist..."
+              />
+            </div>
+
+            <!-- Upload hook for JS/React -->
+            <label class="upload-area click">
+              <input 
+                type="file" 
+                class="upload-input" 
+                accept="image/*" 
+                multiple 
+              />
+              <span class="upload-icon">＋</span>
+              <span class="upload-text">Upload</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Collections / folders -->
+        <div class="design-collections">
+          <div class="collections-label">Collections</div>
+          <div class="collections-list">
+            <button class="collection-pill active click" data-collection="all">All Projects</button>
+            <button class="collection-pill click" data-collection="flash">Flash Sheets</button>
+            <button class="collection-pill click" data-collection="sleeves">Sleeves</button>
+            <button class="collection-pill click" data-collection="fine-line">Fine Line</button>
+            <button class="collection-pill click" data-collection="custom">Custom Sets</button>
+          </div>
+        </div>
+
+        <!-- GRID OF SAVED DESIGNS -->
+        <div class="design-grid" id="design-grid">
+          <!-- your three cards exactly as you pasted -->
+          <!-- Card 1 – web reference example -->
+          <article 
+            class="design-card" 
+            data-id="ref-001" 
+            data-type="reference" 
+            data-favorite="false"
+          >
+            <div class="design-thumb">
+              <img 
+                src="https://your-cdn.com/design-vault/reference-1.jpg" 
+                alt="Japanese dragon back piece reference"
+              />
+              <span class="design-badge badge-reference">Reference</span>
+            </div>
+            <div class="design-meta">
+              <h3 class="design-title">Japanese Dragon Back Piece</h3>
+              <p class="design-tags">Tags: Japanese, Back Piece, Dragon, Color</p>
+              <p class="design-submeta">Source: Web link • Saved: 2025-12-09</p>
+            </div>
+            <div class="design-card-actions">
+              <button class="design-btn ghost click js-open-design">View</button>
+              <button class="design-btn ghost click js-open-source">Open Source</button>
+              <button class="icon-btn click js-toggle-favorite" aria-label="Toggle favorite">
+                ★
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 2 – user upload example -->
+          <article 
+            class="design-card" 
+            data-id="upload-001" 
+            data-type="upload" 
+            data-favorite="true"
+          >
+            <div class="design-thumb">
+              <img 
+                src="https://your-cdn.com/design-vault/upload-1.jpg" 
+                alt="Client forearm rose upload"
+              />
+              <span class="design-badge badge-upload">Upload</span>
+              <span class="design-favorite-flag">★</span>
+            </div>
+            <div class="design-meta">
+              <h3 class="design-title">Client Rose Forearm</h3>
+              <p class="design-tags">Tags: Black & Grey, Floral, Forearm</p>
+              <p class="design-submeta">Source: Your upload • Added: 2025-12-08</p>
+            </div>
+            <div class="design-card-actions">
+              <button class="design-btn ghost click js-open-design">View</button>
+              <button class="design-btn ghost click js-download-design">Download</button>
+              <button class="icon-btn click js-toggle-favorite" aria-label="Toggle favorite">
+                ★
+              </button>
+            </div>
+          </article>
+
+          <!-- Card 3 – AI concept example -->
+          <article 
+            class="design-card" 
+            data-id="ai-001" 
+            data-type="ai" 
+            data-favorite="false"
+          >
+            <div class="design-thumb">
+              <img 
+                src="https://your-cdn.com/design-vault/ai-1.jpg" 
+                alt="AI generated neo-traditional fox and dagger concept"
+              />
+              <span class="design-badge badge-ai">AI Concept</span>
+            </div>
+            <div class="design-meta">
+              <h3 class="design-title">Neo-Traditional Fox &amp; Dagger</h3>
+              <p class="design-tags">Tags: Neo-Traditional, Fox, Dagger, Color</p>
+              <p class="design-submeta">Generated by InkPlan AI • Prompt: “neo-traditional fox with dagger and roses”</p>
+            </div>
+            <div class="design-card-actions">
+              <button class="design-btn ghost click js-open-design">View</button>
+              <button class="design-btn ghost click js-open-prompt">View Prompt</button>
+              <button class="icon-btn click js-toggle-favorite" aria-label="Toggle favorite">
+                ★
+              </button>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <footer>
+        <p>&copy; 2024 InkPlan. All rights reserved.</p>
+    </footer>        
+    </body>
+</html>
