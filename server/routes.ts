@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
+import { requireAuth } from "./middleware/requireAuth";
 import {
   insertUserProfileSchema,
   insertDrawingSchema,
@@ -27,10 +28,19 @@ type LoginBody = {
   password?: string;
 };
 
+type SessionRequest = Request & {
+  session?: {
+    userId?: string;
+  };
+  user?: DevUser;
+  userId?: string;
+};
+
 declare global {
   namespace Express {
     interface Request {
       user?: DevUser;
+      userId?: string;
     }
   }
 }
@@ -52,16 +62,27 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function toSafeUser(user: any) {
+function toSafeUser(user: {
+  id: string;
+  email: string;
+  createdAt?: Date | string | null;
+}) {
   return {
     id: user.id,
     email: user.email,
-    createdAt: user.createdAt ?? user.created_at ?? null,
+    createdAt: user.createdAt ?? null,
   };
 }
 
 function isAuthenticated(req: Request, _res: Response, next: NextFunction) {
-  req.user = {
+  const request = req as SessionRequest;
+
+  if (request.session?.userId) {
+    request.userId = request.session.userId;
+    return next();
+  }
+
+  request.user = {
     claims: {
       sub: "dev-user-123",
       email: "dev@inkplan.com",
@@ -69,6 +90,7 @@ function isAuthenticated(req: Request, _res: Response, next: NextFunction) {
     },
   };
 
+  request.userId = toSingleString(request.user.claims.sub);
   next();
 }
 
@@ -79,6 +101,8 @@ export async function registerRoutes(
   // ============ AUTH ============
 
   app.post("/api/auth/register", async (req: Request, res: Response) => {
+    const request = req as SessionRequest;
+
     try {
       const { email, password } = req.body as RegisterBody;
 
@@ -123,6 +147,10 @@ export async function registerRoutes(
         planId: "free",
       });
 
+      if (request.session) {
+        request.session.userId = user.id;
+      }
+
       return res.status(201).json({
         message: "User registered successfully",
         user: toSafeUser(user),
@@ -135,6 +163,8 @@ export async function registerRoutes(
   });
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
+    const request = req as SessionRequest;
+
     try {
       const { email, password } = req.body as LoginBody;
 
@@ -168,6 +198,10 @@ export async function registerRoutes(
         });
       }
 
+      if (request.session) {
+        request.session.userId = user.id;
+      }
+
       return res.status(200).json({
         message: "Login successful",
         user: toSafeUser(user),
@@ -179,229 +213,336 @@ export async function registerRoutes(
     }
   });
 
-  // ============ USER PROFILES ============
+  app.post("/api/auth/logout", async (req: Request, res: Response) => {
+    const request = req as SessionRequest;
 
-  app.get("/api/profile", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
+    if (!request.session) {
+      return res.status(200).json({ message: "Logout successful" });
+    }
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      let profile = await storage.getUserProfile(userId);
-
-      if (!profile) {
-        const displayName =
-          toSingleString(req.user?.claims?.first_name) ||
-          toSingleString(req.user?.claims?.email) ||
-          "Artist";
-
-        profile = await storage.createUserProfile(userId, {
-          displayName,
-          skillLevel: "Apprentice",
-          planId: "free",
+    request.session.destroy((destroyError) => {
+      if (destroyError) {
+        return res.status(500).json({
+          message: "Failed to log out",
         });
       }
 
-      return res.json(profile);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+      res.clearCookie("connect.sid");
+      return res.status(200).json({ message: "Logout successful" });
+    });
   });
 
-  app.patch("/api/profile", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
+  app.get("/api/auth/me", async (req: Request, res: Response) => {
+    const request = req as SessionRequest;
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const sessionUserId = request.session?.userId;
+
+      if (!sessionUserId) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const data = insertUserProfileSchema.partial().parse(req.body);
-      const profile = await storage.updateUserProfile(userId, data);
+      const user = await storage.getUserById(sessionUserId);
 
-      return res.json(profile);
+      if (!user) {
+        if (request.session) {
+          request.session.userId = undefined;
+        }
+
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      return res.status(200).json({
+        user: toSafeUser(user),
+      });
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      return res.status(500).json({
+        message: error.message || "Internal server error",
+      });
     }
   });
+
+  // ============ USER PROFILES ============
+
+  app.get(
+    "/api/profile",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        let profile = await storage.getUserProfile(userId);
+
+        if (!profile) {
+          const displayName =
+            toSingleString(req.user?.claims?.first_name) ||
+            toSingleString(req.user?.claims?.email) ||
+            "Artist";
+
+          profile = await storage.createUserProfile(userId, {
+            displayName,
+            skillLevel: "Apprentice",
+            planId: "free",
+          });
+        }
+
+        return res.json(profile);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+      }
+    },
+  );
+
+  app.patch(
+    "/api/profile",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const data = insertUserProfileSchema.partial().parse(req.body);
+        const profile = await storage.updateUserProfile(userId, data);
+
+        return res.json(profile);
+      } catch (error: any) {
+        return res.status(400).json({ message: error.message });
+      }
+    },
+  );
 
   // ============ TATTOO STYLES ============
 
-  app.get("/api/styles", isAuthenticated, async (_req: Request, res: Response) => {
-    try {
-      const styles = await storage.getAllStyles();
-      return res.json(styles);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/styles/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const styleId = toSingleString(req.params.id);
-
-      if (!styleId) {
-        return res.status(400).json({ message: "Style id is required" });
+  app.get(
+    "/api/styles",
+    isAuthenticated,
+    async (_req: Request, res: Response) => {
+      try {
+        const styles = await storage.getAllStyles();
+        return res.json(styles);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
+    },
+  );
 
-      const style = await storage.getStyleById(styleId);
+  app.get(
+    "/api/styles/:id",
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const styleId = toSingleString(req.params.id);
 
-      if (!style) {
-        return res.status(404).json({ message: "Style not found" });
+        if (!styleId) {
+          return res.status(400).json({ message: "Style id is required" });
+        }
+
+        const style = await storage.getStyleById(styleId);
+
+        if (!style) {
+          return res.status(404).json({ message: "Style not found" });
+        }
+
+        return res.json(style);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
-
-      return res.json(style);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
+    },
+  );
 
   // ============ DRAWINGS ============
 
-  app.get("/api/drawings", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
+  app.get(
+    "/api/drawings",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const drawings = await storage.getUserDrawings(userId);
+        return res.json(drawings);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
+    },
+  );
 
-      const drawings = await storage.getUserDrawings(userId);
-      return res.json(drawings);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
+  app.get(
+    "/api/drawings/:id",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+        const drawingId = toSingleString(req.params.id);
 
-  app.get("/api/drawings/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
-      const drawingId = toSingleString(req.params.id);
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+        if (!drawingId) {
+          return res.status(400).json({ message: "Drawing id is required" });
+        }
+
+        const drawing = await storage.getDrawingById(drawingId, userId);
+
+        if (!drawing) {
+          return res.status(404).json({ message: "Drawing not found" });
+        }
+
+        return res.json(drawing);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
+    },
+  );
 
-      if (!drawingId) {
-        return res.status(400).json({ message: "Drawing id is required" });
+  app.post(
+    "/api/drawings",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const data = insertDrawingSchema.parse(req.body);
+        const drawing = await storage.createDrawing(userId, data);
+
+        return res.status(201).json(drawing);
+      } catch (error: any) {
+        return res.status(400).json({ message: error.message });
       }
+    },
+  );
 
-      const drawing = await storage.getDrawingById(drawingId);
+  app.patch(
+    "/api/drawings/:id",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+        const drawingId = toSingleString(req.params.id);
 
-      if (!drawing) {
-        return res.status(404).json({ message: "Drawing not found" });
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!drawingId) {
+          return res.status(400).json({ message: "Drawing id is required" });
+        }
+
+        const data = updateDrawingSchema.parse(req.body);
+        const drawing = await storage.updateDrawing(drawingId, userId, data);
+
+        if (!drawing) {
+          return res
+            .status(404)
+            .json({ message: "Drawing not found or unauthorized" });
+        }
+
+        return res.json(drawing);
+      } catch (error: any) {
+        return res.status(400).json({ message: error.message });
       }
+    },
+  );
 
-      if (drawing.userId !== userId) {
-        return res.status(403).json({ message: "Forbidden" });
+  app.delete(
+    "/api/drawings/:id",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
+        const drawingId = toSingleString(req.params.id);
+
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!drawingId) {
+          return res.status(400).json({ message: "Drawing id is required" });
+        }
+
+        const existingDrawing = await storage.getDrawingById(drawingId, userId);
+
+        if (!existingDrawing) {
+          return res.status(404).json({ message: "Drawing not found" });
+        }
+
+        await storage.deleteDrawing(drawingId, userId);
+        return res.status(204).send();
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
-
-      return res.json(drawing);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/drawings", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
-
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const data = insertDrawingSchema.parse(req.body);
-      const drawing = await storage.createDrawing(userId, data);
-
-      return res.status(201).json(drawing);
-    } catch (error: any) {
-      return res.status(400).json({ message: error.message });
-    }
-  });
-
-  app.patch("/api/drawings/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
-      const drawingId = toSingleString(req.params.id);
-
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      if (!drawingId) {
-        return res.status(400).json({ message: "Drawing id is required" });
-      }
-
-      const data = updateDrawingSchema.parse(req.body);
-      const drawing = await storage.updateDrawing(drawingId, userId, data);
-
-      if (!drawing) {
-        return res
-          .status(404)
-          .json({ message: "Drawing not found or unauthorized" });
-      }
-
-      return res.json(drawing);
-    } catch (error: any) {
-      return res.status(400).json({ message: error.message });
-    }
-  });
-
-  app.delete("/api/drawings/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
-      const drawingId = toSingleString(req.params.id);
-
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      if (!drawingId) {
-        return res.status(400).json({ message: "Drawing id is required" });
-      }
-
-      await storage.deleteDrawing(drawingId, userId);
-      return res.status(204).send();
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
+    },
+  );
 
   // ============ PROGRESS ============
 
-  app.get("/api/progress", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
+  app.get(
+    "/api/progress",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const progress = await storage.getUserProgress(userId);
+        return res.json(progress);
+      } catch (error: any) {
+        return res.status(500).json({ message: error.message });
       }
+    },
+  );
 
-      const progress = await storage.getUserProgress(userId);
-      return res.json(progress);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
-  });
+  app.post(
+    "/api/progress",
+    requireAuth,
+    isAuthenticated,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.userId;
 
-  app.post("/api/progress", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = toSingleString(req.user?.claims?.sub);
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+        const parsed = insertProgressSchema
+          .omit({ userId: true })
+          .parse(req.body);
+
+        const progress = await storage.upsertProgress(userId, parsed);
+
+        return res.json(progress);
+      } catch (error: any) {
+        return res.status(400).json({ message: error.message });
       }
-
-      const data = insertProgressSchema.parse({ ...req.body, userId });
-      const progress = await storage.upsertProgress(data);
-
-      return res.json(progress);
-    } catch (error: any) {
-      return res.status(400).json({ message: error.message });
-    }
-  });
+    },
+  );
 
   return httpServer;
 }

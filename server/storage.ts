@@ -18,6 +18,8 @@ import {
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
+type ProgressUpdateInput = Omit<InsertProgress, "userId">;
+
 export interface IStorage {
   // Users
   getUserById(id: string): Promise<AppUser | undefined>;
@@ -42,7 +44,7 @@ export interface IStorage {
 
   // Drawings
   getUserDrawings(userId: string): Promise<Drawing[]>;
-  getDrawingById(id: string): Promise<Drawing | undefined>;
+  getDrawingById(id: string, userId: string): Promise<Drawing | undefined>;
   createDrawing(userId: string, data: InsertDrawing): Promise<Drawing>;
   updateDrawing(
     id: string,
@@ -58,7 +60,10 @@ export interface IStorage {
     userId: string,
     styleId: string,
   ): Promise<UserProgress | undefined>;
-  upsertProgress(data: InsertProgress): Promise<UserProgress>;
+  upsertProgress(
+    userId: string,
+    data: ProgressUpdateInput,
+  ): Promise<UserProgress>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -109,7 +114,10 @@ export class DatabaseStorage implements IStorage {
   ): Promise<UserProfile> {
     const [profile] = await db
       .insert(userProfiles)
-      .values({ userId, ...data })
+      .values({
+        ...data,
+        userId,
+      })
       .returning();
 
     return profile;
@@ -121,7 +129,10 @@ export class DatabaseStorage implements IStorage {
   ): Promise<UserProfile | undefined> {
     const [profile] = await db
       .update(userProfiles)
-      .set({ ...data, updatedAt: new Date() })
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
       .where(eq(userProfiles.userId, userId))
       .returning();
 
@@ -157,11 +168,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(drawings.createdAt));
   }
 
-  async getDrawingById(id: string): Promise<Drawing | undefined> {
+  async getDrawingById(id: string, userId: string): Promise<Drawing | undefined> {
     const [drawing] = await db
       .select()
       .from(drawings)
-      .where(eq(drawings.id, id));
+      .where(and(eq(drawings.id, id), eq(drawings.userId, userId)));
 
     return drawing;
   }
@@ -169,25 +180,30 @@ export class DatabaseStorage implements IStorage {
   async createDrawing(userId: string, data: InsertDrawing): Promise<Drawing> {
     const [drawing] = await db
       .insert(drawings)
-      .values({ userId, ...data })
+      .values({
+        ...data,
+        userId,
+      })
       .returning();
 
     return drawing;
   }
 
-async updateDrawing(
-  id: string,
-  userId: string,
-  data: UpdateDrawing,
-): Promise<Drawing | undefined> {
-  const [drawing] = await db
-    .update(drawings)
-    .set(data)
-    .where(and(eq(drawings.id, id), eq(drawings.userId, userId)))
-    .returning();
+  async updateDrawing(
+    id: string,
+    userId: string,
+    data: UpdateDrawing,
+  ): Promise<Drawing | undefined> {
+    const [drawing] = await db
+      .update(drawings)
+      .set({
+        ...data,
+      })
+      .where(and(eq(drawings.id, id), eq(drawings.userId, userId)))
+      .returning();
 
-  return drawing;
-}
+    return drawing;
+  }
 
   async deleteDrawing(id: string, userId: string): Promise<void> {
     await db
@@ -204,7 +220,7 @@ async updateDrawing(
     return result.length;
   }
 
-  
+  // Progress
   async getUserProgress(userId: string): Promise<UserProgress[]> {
     return await db
       .select()
@@ -226,10 +242,16 @@ async updateDrawing(
     return progress;
   }
 
-  async upsertProgress(data: InsertProgress): Promise<UserProgress> {
+  async upsertProgress(
+    userId: string,
+    data: ProgressUpdateInput,
+  ): Promise<UserProgress> {
     const [progress] = await db
       .insert(userProgress)
-      .values(data)
+      .values({
+        ...data,
+        userId,
+      })
       .onConflictDoUpdate({
         target: [userProgress.userId, userProgress.styleId],
         set: {
