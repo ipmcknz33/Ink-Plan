@@ -24,12 +24,26 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email);
 }
 
-function toSafeUser(user: { id: string; email: string; createdAt?: Date | string }) {
+function toSafeUser(user: {
+  id: string;
+  email: string;
+  createdAt?: Date | string;
+}) {
   return {
     id: user.id,
     email: user.email,
     createdAt: user.createdAt,
   };
+}
+
+async function ensureUserProfile(userId: string) {
+  const existingProfile = await storage.getUserProfile(userId);
+
+  if (!existingProfile) {
+    await storage.createUserProfile(userId, {
+      subscriptionTier: "free",
+    });
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<void> {
@@ -51,14 +65,18 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       if (password.length < 6) {
-        res.status(400).json({ error: "Password must be at least 6 characters" });
+        res
+          .status(400)
+          .json({ error: "Password must be at least 6 characters" });
         return;
       }
 
       const existingUser = await storage.getUserByEmail(email);
 
       if (existingUser) {
-        res.status(409).json({ error: "An account with this email already exists" });
+        res
+          .status(409)
+          .json({ error: "An account with this email already exists" });
         return;
       }
 
@@ -69,10 +87,20 @@ export async function registerRoutes(app: Express): Promise<void> {
         passwordHash,
       });
 
+      await ensureUserProfile(user.id);
+
       request.session.userId = user.id;
 
-      res.status(201).json({
-        user: toSafeUser(user),
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Register session save error:", saveError);
+          res.status(500).json({ error: "Failed to register user" });
+          return;
+        }
+
+        res.status(201).json({
+          user: toSafeUser(user),
+        });
       });
     } catch (error) {
       console.error("Register error:", error);
@@ -106,10 +134,20 @@ export async function registerRoutes(app: Express): Promise<void> {
         return;
       }
 
+      await ensureUserProfile(user.id);
+
       request.session.userId = user.id;
 
-      res.status(200).json({
-        user: toSafeUser(user),
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Login session save error:", saveError);
+          res.status(500).json({ error: "Failed to log in" });
+          return;
+        }
+
+        res.status(200).json({
+          user: toSafeUser(user),
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -120,6 +158,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     const request = req as RequestWithSession;
 
+    if (!request.session) {
+      res.clearCookie("connect.sid");
+      res.status(200).json({ message: "Logged out successfully" });
+      return;
+    }
+
     request.session.destroy((destroyError) => {
       if (destroyError) {
         console.error("Logout error:", destroyError);
@@ -127,7 +171,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         return;
       }
 
-      res.clearCookie("connect.sid");
+      res.clearCookie("connect.sid", {
+        path: "/",
+      });
+
       res.status(200).json({ message: "Logged out successfully" });
     });
   });
@@ -136,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     const request = req as RequestWithSession;
 
     try {
-      const userId = request.session.userId;
+      const userId = request.session?.userId;
 
       if (!userId) {
         res.status(401).json({ error: "Not authenticated" });
@@ -147,9 +194,18 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       if (!user) {
         request.session.userId = undefined;
-        res.status(401).json({ error: "Not authenticated" });
+
+        request.session.save((saveError) => {
+          if (saveError) {
+            console.error("Session cleanup error:", saveError);
+          }
+
+          res.status(401).json({ error: "Not authenticated" });
+        });
         return;
       }
+
+      await ensureUserProfile(user.id);
 
       res.status(200).json({
         user: toSafeUser(user),

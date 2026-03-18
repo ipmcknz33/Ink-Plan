@@ -19,6 +19,14 @@ import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
 type ProgressUpdateInput = Omit<InsertProgress, "userId">;
+type SubscriptionTier = "free" | "pro" | "premium";
+
+type UserProfileInput = {
+  displayName?: string | null;
+  bio?: string | null;
+  skillLevel?: string | null;
+  subscriptionTier?: SubscriptionTier;
+};
 
 export interface IStorage {
   // Users
@@ -30,11 +38,11 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   createUserProfile(
     userId: string,
-    data: InsertUserProfile,
+    data?: UserProfileInput,
   ): Promise<UserProfile>;
   updateUserProfile(
     userId: string,
-    data: Partial<InsertUserProfile>,
+    data: Partial<UserProfileInput>,
   ): Promise<UserProfile | undefined>;
 
   // Tattoo styles
@@ -110,13 +118,16 @@ export class DatabaseStorage implements IStorage {
 
   async createUserProfile(
     userId: string,
-    data: InsertUserProfile,
+    data: UserProfileInput = {},
   ): Promise<UserProfile> {
     const [profile] = await db
       .insert(userProfiles)
       .values({
-        ...data,
         userId,
+        displayName: data.displayName ?? null,
+        bio: data.bio ?? null,
+        skillLevel: data.skillLevel ?? null,
+        subscriptionTier: data.subscriptionTier ?? "free",
       })
       .returning();
 
@@ -125,14 +136,29 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserProfile(
     userId: string,
-    data: Partial<InsertUserProfile>,
+    data: Partial<UserProfileInput>,
   ): Promise<UserProfile | undefined> {
+    const updateData: Partial<UserProfileInput> = {};
+
+    if (data.displayName !== undefined) {
+      updateData.displayName = data.displayName;
+    }
+
+    if (data.bio !== undefined) {
+      updateData.bio = data.bio;
+    }
+
+    if (data.skillLevel !== undefined) {
+      updateData.skillLevel = data.skillLevel;
+    }
+
+    if (data.subscriptionTier !== undefined) {
+      updateData.subscriptionTier = data.subscriptionTier;
+    }
+
     const [profile] = await db
       .update(userProfiles)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(userProfiles.userId, userId))
       .returning();
 
@@ -168,7 +194,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(drawings.createdAt));
   }
 
-  async getDrawingById(id: string, userId: string): Promise<Drawing | undefined> {
+  async getDrawingById(
+    id: string,
+    userId: string,
+  ): Promise<Drawing | undefined> {
     const [drawing] = await db
       .select()
       .from(drawings)

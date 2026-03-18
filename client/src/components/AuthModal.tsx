@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { signInWithPopup } from "firebase/auth";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 import { useAuth, type AuthUser } from "@/components/providers/AuthProvider";
+import { auth, googleProvider } from "@/lib/firebase";
 
 type AuthMode = "signin" | "signup";
 
@@ -37,25 +40,69 @@ function extractUser(data: AuthResponseShape): AuthUser | null {
   return null;
 }
 
+async function parseApiResponse(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return { error: text || "Request failed" };
+}
+
 export default function AuthModal({ open, onClose }: AuthModalProps) {
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
   const [, navigate] = useLocation();
 
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!open) return null;
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setErrorMessage("");
+  };
 
-    setSubmitting(true);
-    setError("");
+  const completeAuth = async (fallbackUser: AuthUser) => {
+    const refreshedUser = await refreshUser();
+    const nextUser = refreshedUser ?? fallbackUser;
 
+    login(nextUser);
+    resetForm();
+    onClose();
+    navigate("/dashboard", { replace: true });
+  };
+
+  const handleEmailAuth = async () => {
     try {
+      setLoading(true);
+      setErrorMessage("");
+
+      if (!email.trim() || !password.trim()) {
+        setErrorMessage("Email and password are required.");
+        return;
+      }
+
+      if (mode === "signup") {
+        if (password.length < 6) {
+          setErrorMessage("Password must be at least 6 characters.");
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          setErrorMessage("Passwords do not match.");
+          return;
+        }
+      }
+
       const endpoint =
         mode === "signin" ? "/api/auth/login" : "/api/auth/register";
 
@@ -63,142 +110,230 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
         }),
       });
 
-      const data = (await response.json()) as AuthResponseShape;
+      const data = await parseApiResponse(response);
 
       if (!response.ok) {
-        setError(data.error || data.message || "Authentication failed");
-        return;
+        throw new Error(data?.error || data?.message || `${mode} failed`);
       }
 
       const user = extractUser(data);
-
       if (!user) {
-        setError("Authentication succeeded, but no user was returned");
-        return;
+        throw new Error("No user returned from server");
       }
 
-      login(user);
-      onClose();
-      navigate("/dashboard");
+      await completeAuth(user);
     } catch (error) {
-      console.error("Auth error:", error);
-      setError("Something went wrong. Please try again.");
+      const message =
+        error instanceof Error ? error.message : "Authentication failed";
+      setErrorMessage(message);
+      console.error(`${mode} error:`, error);
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  }
+  };
 
-  function handleClose() {
-    if (submitting) return;
-    setError("");
-    onClose();
-  }
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await parseApiResponse(response);
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Google login failed");
+      }
+
+      const user = extractUser(data);
+      if (!user) {
+        throw new Error("No user returned from backend");
+      }
+
+      await completeAuth(user);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Google login failed";
+      setErrorMessage(message);
+      console.error("Google login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await fetch("/api/auth/guest", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      const data = await parseApiResponse(response);
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Guest login failed");
+      }
+
+      const user = extractUser(data);
+      if (!user) {
+        throw new Error("No guest user returned");
+      }
+
+      await completeAuth(user);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Guest login failed";
+      setErrorMessage(message);
+      console.error("Guest login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setErrorMessage("");
+    setPassword("");
+    setConfirmPassword("");
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <button
           type="button"
-          onClick={handleClose}
+          onClick={() => {
+            resetForm();
+            onClose();
+          }}
           className="absolute right-4 top-4 text-gray-500 hover:text-black"
-          aria-label="Close auth modal"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-black">
-            {mode === "signin" ? "Sign In" : "Create Account"}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {mode === "signin"
-              ? "Log in to continue into InkPlan."
-              : "Create your InkPlan account to get started."}
-          </p>
-        </div>
+        <h2 className="mb-4 text-2xl font-bold text-black">
+          {mode === "signin" ? "Sign In" : "Create Account"}
+        </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-black"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-black"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete={
-                mode === "signin" ? "current-password" : "new-password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-xl bg-black px-4 py-3 text-white transition hover:opacity-90 disabled:opacity-50"
-          >
-            {submitting
-              ? mode === "signin"
-                ? "Signing In..."
-                : "Creating Account..."
-              : mode === "signin"
-                ? "Sign In"
-                : "Create Account"}
-          </button>
-        </form>
-
-        <div className="mt-4 text-center text-sm text-gray-600">
-          {mode === "signin" ? "Need an account?" : "Already have an account?"}{" "}
+        <div className="mb-4 flex rounded-md border border-gray-300 p-1">
           <button
             type="button"
-            onClick={() => {
-              setMode(mode === "signin" ? "signup" : "signin");
-              setError("");
-            }}
-            className="font-semibold text-black underline"
+            onClick={() => switchMode("signin")}
+            className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
+              mode === "signin"
+                ? "bg-black text-white"
+                : "bg-transparent text-black"
+            }`}
           >
-            {mode === "signin" ? "Create one" : "Sign in"}
+            Sign In
           </button>
+          <button
+            type="button"
+            onClick={() => switchMode("signup")}
+            className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
+              mode === "signup"
+                ? "bg-black text-white"
+                : "bg-transparent text-black"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
+            disabled={loading}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
+            disabled={loading}
+          />
+
+          {mode === "signup" && (
+            <input
+              type="password"
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
+              disabled={loading}
+            />
+          )}
+
+          {errorMessage ? (
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          ) : null}
+
+          <Button
+            type="button"
+            onClick={handleEmailAuth}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading
+              ? "Please wait..."
+              : mode === "signin"
+                ? "Continue with Email"
+                : "Create Account"}
+          </Button>
+
+          <div className="my-2 text-center text-sm text-gray-500">or</div>
+
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            variant="outline"
+            className="w-full"
+          >
+            Continue with Google
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={loading}
+            variant="outline"
+            className="w-full"
+          >
+            Continue as Guest
+          </Button>
         </div>
       </div>
     </div>

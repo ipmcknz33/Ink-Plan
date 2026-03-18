@@ -9,18 +9,18 @@ type ProtectedRouteProps = {
 };
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isHydrating } = useAuth();
+  const { isAuthenticated, isHydrated } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (isHydrating) return;
+    if (!isHydrated) return;
 
     if (!isAuthenticated) {
       navigate("/");
     }
-  }, [isAuthenticated, isHydrating, navigate]);
+  }, [isAuthenticated, isHydrated, navigate]);
 
-  if (isHydrating) {
+  if (!isHydrated) {
     return null;
   }
 

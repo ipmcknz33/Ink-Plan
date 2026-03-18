@@ -1,17 +1,45 @@
-import { Link, useLocation } from "wouter";
-import { PenTool, Library, BookOpen, LayoutDashboard, Menu, LogOut } from "lucide-react";
-import { useState } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { useLocation } from "wouter";
+import {
+  LayoutDashboard,
+  BookOpen,
+  PenTool,
+  Library,
+  Menu,
+  LogOut,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
-import { useProfile } from "@/hooks/use-api";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/components/providers/AuthProvider";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+type LayoutProps = {
+  children: ReactNode;
+};
+
+function getUserLabel(email?: string | null) {
+  if (!email) return "Guest";
+
+  const normalized = email.toLowerCase();
+
+  if (
+    normalized.includes("guest") ||
+    normalized.startsWith("guest@") ||
+    normalized.startsWith("guest-")
+  ) {
+    return "Guest";
+  }
+
+  return email;
+}
+
+export default function Layout({ children }: LayoutProps) {
+  const [location, navigate] = useLocation();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
-  const { data: profile } = useProfile();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -20,94 +48,108 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { label: "Library", href: "/library", icon: Library },
   ];
 
-  const displayName = profile?.displayName || user?.firstName || user?.email || "Artist";
-  const initials = displayName.slice(0, 2).toUpperCase();
-  const planName = profile?.planId === "pro" ? "Pro Plan" : "Free Plan";
+  const userLabel = getUserLabel(user?.email);
+  const avatarLetter = user?.email?.charAt(0).toUpperCase() || "G";
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-card border-r border-border">
-      <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-display font-black tracking-tighter uppercase">
-          Ink<span className="text-accent">Plan</span>
-        </h1>
-        <p className="text-xs text-muted-foreground font-mono mt-1">v1.0.0-MVP</p>
+  const handleNavigate = (href: string) => {
+    navigate(href);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      setIsMobileMenuOpen(false);
+      navigate("/", { replace: true });
+      window.location.replace("/");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const SidebarContent = (
+    <div className="flex h-full flex-col bg-white">
+      <div className="border-b border-slate-200 px-6 py-4">
+        <h1 className="text-lg font-semibold tracking-tight">INKPLAN</h1>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
-          const isActive = location === item.href || location.startsWith(`${item.href}/`);
+          const Icon = item.icon;
+          const isActive = location === item.href;
+
           return (
-            <Link key={item.href} href={item.href}>
-              <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 group cursor-pointer
-                  ${isActive 
-                    ? "bg-primary text-primary-foreground shadow-md" 
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
-                data-testid={`nav-${item.label.toLowerCase()}`}
-              >
-                <item.icon className={`w-5 h-5 ${isActive ? "text-accent" : "text-muted-foreground group-hover:text-foreground"}`} />
-                <span className="font-medium font-sans">{item.label}</span>
-              </div>
-            </Link>
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => handleNavigate(item.href)}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                isActive
+                  ? "bg-black text-white"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </button>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 p-2 rounded-md bg-secondary/30">
-          <Avatar className="h-10 w-10 border border-border">
-            <AvatarImage src={user?.profileImageUrl || undefined} />
-            <AvatarFallback>{initials}</AvatarFallback>
+      <div className="space-y-4 border-t border-slate-200 p-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="h-4 w-4" />
+          {isLoggingOut ? "Logging out..." : "Logout"}
+        </button>
+
+        <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>{avatarLetter}</AvatarFallback>
           </Avatar>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-bold truncate" data-testid="text-display-name">{displayName}</p>
-            <p className="text-xs text-muted-foreground truncate">{planName}</p>
+
+          <div className="min-w-0 text-xs">
+            <p className="truncate font-medium text-slate-900">{userLabel}</p>
+            <p className="text-slate-500">Free Plan</p>
           </div>
-          <a href="/api/logout">
-            <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-logout">
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </a>
         </div>
-        {profile?.planId === "free" && (
-          <Link href="/upgrade">
-            <Button className="w-full mt-4 bg-accent hover:bg-accent/90 text-white font-bold border-none" size="sm" data-testid="button-upgrade">
-              Upgrade to Pro
-            </Button>
-          </Link>
-        )}
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <aside className="hidden md:block w-64 fixed inset-y-0 z-50">
-        <SidebarContent />
-      </aside>
+    <div className="min-h-screen bg-slate-50">
+      <div className="lg:hidden flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+        <h1 className="text-lg font-semibold tracking-tight">INKPLAN</h1>
 
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 px-4 flex items-center justify-between">
-         <h1 className="text-xl font-display font-black tracking-tighter uppercase">
-          Ink<span className="text-accent">Plan</span>
-        </h1>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="w-6 h-6" />
+            <Button type="button" variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64">
-            <SidebarContent />
+
+          <SheetContent side="left" className="w-72 p-0">
+            {SidebarContent}
           </SheetContent>
         </Sheet>
       </div>
 
-      <main className="flex-1 md:ml-64 p-4 md:p-8 pt-20 md:pt-8 animate-in fade-in duration-500">
-        <div className="max-w-6xl mx-auto">
-          {children}
-        </div>
-      </main>
+      <div className="flex min-h-screen">
+        <aside className="hidden w-64 border-r border-slate-200 bg-white lg:block">
+          {SidebarContent}
+        </aside>
+
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }

@@ -30,7 +30,10 @@ export const userProfiles = pgTable("user_profiles", {
   displayName: text("display_name"),
   skillLevel: text("skill_level").default("Apprentice"),
   bio: text("bio"),
-  planId: text("plan_id").notNull().default("free"),
+  subscriptionTier: text("subscription_tier")
+    .$type<"free" | "pro" | "premium">()
+    .notNull()
+    .default("free"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -61,7 +64,9 @@ export const tattooStylesRelations = relations(tattooStyles, ({ many }) => ({
 export const drawings = pgTable(
   "drawings",
   {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: varchar("user_id")
       .notNull()
       .references(() => userProfiles.userId, { onDelete: "cascade" }),
@@ -94,7 +99,9 @@ export const drawingsRelations = relations(drawings, ({ one }) => ({
 export const userProgress = pgTable(
   "user_progress",
   {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: varchar("user_id")
       .notNull()
       .references(() => userProfiles.userId, { onDelete: "cascade" }),
@@ -105,7 +112,9 @@ export const userProgress = pgTable(
     hoursPracticed: integer("hours_practiced").default(0),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [uniqueIndex("progress_user_style_idx").on(table.userId, table.styleId)],
+  (table) => [
+    uniqueIndex("progress_user_style_idx").on(table.userId, table.styleId),
+  ],
 );
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
