@@ -9,7 +9,12 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Learn from "@/pages/Learn";
 import Library from "@/pages/Library";
+import ReferencePacks from "@/pages/ReferencePacks";
+import FlashStudies from "@/pages/FlashStudies";
+import Fundamentals from "@/pages/Fundamentals";
 import StylesList from "@/pages/StylesList";
+import StyleDetail from "@/pages/StyleDetail";
+import Practice from "@/pages/Practice";
 import Progress from "@/pages/Progress";
 import Upgrade from "@/pages/Upgrade";
 
@@ -32,15 +37,45 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
+      <Route path="/library/reference-packs">
+        <ProtectedRoute>
+          <ReferencePacks />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/library/flash-studies">
+        <ProtectedRoute>
+          <FlashStudies />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/library/fundamentals">
+        <ProtectedRoute>
+          <Fundamentals />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/library">
         <ProtectedRoute>
           <Library />
         </ProtectedRoute>
       </Route>
 
+      <Route path="/styles/:id">
+        <ProtectedRoute>
+          <StyleDetail />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/styles">
         <ProtectedRoute>
           <StylesList />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/practice">
+        <ProtectedRoute>
+          <Practice />
         </ProtectedRoute>
       </Route>
 

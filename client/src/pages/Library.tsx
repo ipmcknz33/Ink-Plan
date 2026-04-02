@@ -24,6 +24,7 @@ type LibraryItem = {
   category: string;
   description: string;
   tier: PlanTier;
+  href?: string;
 };
 
 const libraryItems: LibraryItem[] = [
@@ -32,6 +33,7 @@ const libraryItems: LibraryItem[] = [
     category: "Free",
     description: "Core reference material to build consistency and confidence.",
     tier: "free",
+    href: "/library/reference-packs",
   },
   {
     title: "Basic Shading Study Set",
@@ -39,6 +41,7 @@ const libraryItems: LibraryItem[] = [
     description:
       "Useful, practical studies that help new artists start sharpening control.",
     tier: "free",
+    href: "/library/flash-studies",
   },
   {
     title: "Composition Starter Pack",
@@ -46,6 +49,7 @@ const libraryItems: LibraryItem[] = [
     description:
       "Simple layout references that introduce stronger tattoo design structure.",
     tier: "free",
+    href: "/library/fundamentals",
   },
   {
     title: "Pro Style Breakdown Collection",
@@ -110,7 +114,18 @@ export default function Library() {
         : "Premium Active";
 
   function handleUpgradeClick() {
-    setLocation("/");
+    setLocation("/upgrade");
+  }
+
+  function handleItemClick(item: (typeof visibleItems)[number]) {
+    if (item.locked) {
+      setLocation("/upgrade");
+      return;
+    }
+
+    if (item.href) {
+      setLocation(item.href);
+    }
   }
 
   if (isLoading) {
@@ -152,7 +167,7 @@ export default function Library() {
                 Premium become as you level up.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border bg-background px-4 py-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
                     Current plan
@@ -225,7 +240,7 @@ export default function Library() {
         </section>
 
         <section>
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-primary">
                 Content Library
@@ -246,7 +261,9 @@ export default function Library() {
             {visibleItems.map((item) => (
               <Card
                 key={item.title}
-                className="relative overflow-hidden rounded-3xl border shadow-sm transition-all"
+                className={`relative overflow-hidden rounded-3xl border shadow-sm transition-all ${
+                  !item.locked ? "hover:border-primary hover:shadow-md" : ""
+                }`}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-3">
@@ -294,11 +311,22 @@ export default function Library() {
                         </>
                       )}
                     </div>
+
+                    {!item.locked && item.href ? (
+                      <Button
+                        className="mt-6 w-full"
+                        variant="outline"
+                        onClick={() => handleItemClick(item)}
+                      >
+                        Open section
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    ) : null}
                   </div>
                 </CardContent>
 
                 {item.locked ? (
-                  <div className="absolute inset-0 flex items-end bg-background/35 p-6">
+                  <div className="absolute inset-0 flex items-end bg-background/35 p-4 sm:p-6">
                     <div className="w-full rounded-2xl border bg-background p-4 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
