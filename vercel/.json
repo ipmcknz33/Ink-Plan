@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://ink-plan.onrender.com/api/$1"
+    }
+  ]
+}
