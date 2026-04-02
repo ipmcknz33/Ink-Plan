@@ -178,7 +178,7 @@ export function registerRoutes(app: Express) {
 
       const user = await storage.createUser({
         email: guestEmail,
-        passwordHash: "",
+        passwordHash: "guest-account",
       });
 
       await ensureUserProfile(user.id);
@@ -188,15 +188,26 @@ export function registerRoutes(app: Express) {
       request.session.save((err) => {
         if (err) {
           console.error("Guest session save error:", err);
-          res.status(500).json({ error: "Failed to save guest session" });
+          res.status(500).json({
+            error: "Failed to save guest session",
+            details: err.message,
+          });
           return;
         }
 
+        console.log("Guest login success:", user.id, user.email);
         res.json(toSafeUser(user));
       });
     } catch (error) {
-      console.error("Guest login error:", error);
-      res.status(500).json({ error: "Guest login failed" });
+      console.error("Guest login FULL ERROR:", error);
+
+      const message =
+        error instanceof Error ? error.message : "Unknown guest login error";
+
+      res.status(500).json({
+        error: "Guest login failed",
+        details: message,
+      });
     }
   });
 
@@ -224,7 +235,7 @@ export function registerRoutes(app: Express) {
       if (!user) {
         user = await storage.createUser({
           email,
-          passwordHash: "",
+          passwordHash: "google-auth-account",
         });
       }
 

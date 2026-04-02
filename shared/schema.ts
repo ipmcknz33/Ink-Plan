@@ -11,10 +11,23 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { users } from "./models/auth";
 
-// Re-export auth table through shared/schema so server code imports from one place
-export { users };
+// ============ AUTH MODELS ============
+
+export const sessions = pgTable("sessions", {
+  sid: varchar("sid").primaryKey(),
+  sess: text("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+});
+
+export const users = pgTable("users", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // App-level auth types used by storage.ts
 export type AppUser = typeof users.$inferSelect;
@@ -38,12 +51,6 @@ export const userProfiles = pgTable("user_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
-  drawings: many(drawings),
-  progress: many(userProgress),
-}));
-
-// Tattoo styles (pre-seeded data)
 export const tattooStyles = pgTable("tattoo_styles", {
   id: varchar("id").primaryKey(),
   name: text("name").notNull(),
@@ -55,12 +62,6 @@ export const tattooStyles = pgTable("tattoo_styles", {
   previewImage: text("preview_image").notNull(),
 });
 
-export const tattooStylesRelations = relations(tattooStyles, ({ many }) => ({
-  drawings: many(drawings),
-  progress: many(userProgress),
-}));
-
-// User drawings (uploaded practice work)
 export const drawings = pgTable(
   "drawings",
   {
@@ -84,18 +85,6 @@ export const drawings = pgTable(
   ],
 );
 
-export const drawingsRelations = relations(drawings, ({ one }) => ({
-  user: one(userProfiles, {
-    fields: [drawings.userId],
-    references: [userProfiles.userId],
-  }),
-  style: one(tattooStyles, {
-    fields: [drawings.styleId],
-    references: [tattooStyles.id],
-  }),
-}));
-
-// User progress tracking per style
 export const userProgress = pgTable(
   "user_progress",
   {
@@ -116,6 +105,29 @@ export const userProgress = pgTable(
     uniqueIndex("progress_user_style_idx").on(table.userId, table.styleId),
   ],
 );
+
+// ============ RELATIONS ============
+
+export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
+  drawings: many(drawings),
+  progress: many(userProgress),
+}));
+
+export const tattooStylesRelations = relations(tattooStyles, ({ many }) => ({
+  drawings: many(drawings),
+  progress: many(userProgress),
+}));
+
+export const drawingsRelations = relations(drawings, ({ one }) => ({
+  user: one(userProfiles, {
+    fields: [drawings.userId],
+    references: [userProfiles.userId],
+  }),
+  style: one(tattooStyles, {
+    fields: [drawings.styleId],
+    references: [tattooStyles.id],
+  }),
+}));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
   user: one(userProfiles, {

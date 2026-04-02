@@ -30,11 +30,6 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-type MeResponse = {
-  user?: AuthUser;
-  error?: string;
-};
-
 async function fetchCurrentUser(): Promise<AuthUser | null> {
   const response = await fetch("/api/auth/me", {
     method: "GET",
@@ -52,8 +47,8 @@ async function fetchCurrentUser(): Promise<AuthUser | null> {
     throw new Error("Failed to fetch current user");
   }
 
-  const data: MeResponse = await response.json();
-  return data.user ?? null;
+  const data = (await response.json()) as AuthUser | null;
+  return data;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
