@@ -209,9 +209,7 @@ export default function FundamentalsPage() {
             </div>
           </div>
 
-          <div className="xl:sticky xl:top-6 xl:self-start">
-            <AICoachPanel />
-          </div>
+          <div className="xl:sticky xl:top-6 xl:self-start"></div>
         </div>
       </div>
     </Layout>

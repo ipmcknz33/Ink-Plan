@@ -6,35 +6,87 @@ import {
   ArrowRight,
   BookOpen,
   Loader2,
-  Search,
+  ShieldCheck,
   Sparkles,
-  Star,
+  Target,
 } from "lucide-react";
-import { useMemo, useState } from "react";
 import { useStyles } from "@/hooks/use-api";
-import { Input } from "@/components/ui/input";
+import { useMemo } from "react";
+
+type StyleItem = {
+  id: string;
+  name: string;
+  definition: string;
+  previewImage: string;
+  tags: string[];
+};
+
+const fallbackStyles: StyleItem[] = [
+  {
+    id: "traditional",
+    name: "American Traditional",
+    definition:
+      "Bold outlines, strong readability, and classic tattoo structure built to hold up clearly.",
+    previewImage: "/images/traditional-style.jpg",
+    tags: ["Bold", "Classic", "Readable"],
+  },
+  {
+    id: "black-grey",
+    name: "Black & Grey",
+    definition:
+      "Smooth shading, value control, and clean form separation built through light, mid, and dark balance.",
+    previewImage: "/images/black-grey-style.jpg",
+    tags: ["Smooth", "Value", "Contrast"],
+  },
+  {
+    id: "japanese",
+    name: "Japanese",
+    definition:
+      "Flowing composition, movement, hierarchy, and strong large-form design.",
+    previewImage: "/images/japanese-style.jpg",
+    tags: ["Flow", "Movement", "Large Forms"],
+  },
+  {
+    id: "lettering",
+    name: "Lettering",
+    definition:
+      "Clean typography, spacing, rhythm, and readable tattoo design.",
+    previewImage: "/images/lettering-style.jpg",
+    tags: ["Typography", "Spacing", "Readable"],
+  },
+  {
+    id: "neo-traditional",
+    name: "Neo Traditional",
+    definition:
+      "A richer, more illustrative evolution of Traditional with stronger color, stylized forms, and extra detail.",
+    previewImage: "/images/neo-traditional-style.jpg",
+    tags: ["Stylized", "Color", "Illustrative"],
+  },
+  {
+    id: "fine-line",
+    name: "Fine Line",
+    definition:
+      "Delicate, minimal tattooing built on restraint, spacing, subtle linework, and clean simplicity.",
+    previewImage: "/images/fine-line-style.jpg",
+    tags: ["Delicate", "Minimal", "Clean"],
+  },
+];
 
 export default function StylesList() {
-  const { data: styles, isLoading } = useStyles();
-  const [search, setSearch] = useState("");
+  const stylesQuery = useStyles();
 
-  const filteredStyles = useMemo(() => {
-    if (!styles) return [];
+  const styles = (stylesQuery.data as StyleItem[] | undefined) ?? [];
+  const isLoading = stylesQuery.isLoading;
 
-    const query = search.trim().toLowerCase();
+  const displayStyles = useMemo<StyleItem[]>(() => {
+    if (styles.length > 0) {
+      return styles;
+    }
 
-    if (!query) return styles;
+    return fallbackStyles;
+  }, [styles]);
 
-    return styles.filter((style) => {
-      const haystack = [style.name, style.definition, ...(style.tags || [])]
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(query);
-    });
-  }, [styles, search]);
-
-  if (isLoading) {
+  if (isLoading && styles.length === 0) {
     return (
       <Layout>
         <div className="flex h-64 items-center justify-center">
@@ -47,59 +99,61 @@ export default function StylesList() {
   return (
     <Layout>
       <div className="space-y-8">
-        <section className="rounded-3xl border bg-card p-6 shadow-sm md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+        <section className="rounded-3xl border border-white/8 bg-card p-6 shadow-none md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Build your visual vocabulary
+              <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-red-300">
+                <Sparkles className="h-3.5 w-3.5 text-red-400" />
+                Study styles the right way
               </div>
 
-              <div className="space-y-2">
-                <h1 className="text-3xl font-display font-bold tracking-tight md:text-4xl">
-                  Style Dictionary
+              <div className="space-y-3">
+                <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                  Choose a style to study
                 </h1>
-                <p className="max-w-2xl text-muted-foreground">
-                  Explore tattoo traditions, learn what makes each one readable,
-                  and study the rules before you practice them. Start broad,
-                  then go deep.
+                <p className="max-w-2xl text-sm leading-7 text-zinc-400 md:text-base">
+                  Explore tattoo styles, understand what makes them readable,
+                  and study the rules before practicing them. Build broad
+                  understanding first, then narrow your direction later.
                 </p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <Card className="border-border/80 shadow-none">
+              <Card className="border-white/8 bg-white/[0.03] shadow-none">
                 <CardContent className="p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <BookOpen className="h-5 w-5 text-primary" />
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                    <BookOpen className="h-5 w-5 text-red-400" />
                   </div>
-                  <p className="font-medium">Study first</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="font-medium text-white">Study first</p>
+                  <p className="mt-1 text-sm text-zinc-400">
                     Learn the structure behind the look.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-border/80 shadow-none">
+              <Card className="border-white/8 bg-white/[0.03] shadow-none">
                 <CardContent className="p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <Star className="h-5 w-5 text-primary" />
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                    <Target className="h-5 w-5 text-red-400" />
                   </div>
-                  <p className="font-medium">Train your eye</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Spot patterns, contrast, and readability.
+                  <p className="font-medium text-white">Train your eye</p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Spot clarity, flow, and common mistakes.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-border/80 shadow-none">
+              <Card className="border-white/8 bg-white/[0.03] shadow-none">
                 <CardContent className="p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <Sparkles className="h-5 w-5 text-primary" />
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                    <ShieldCheck className="h-5 w-5 text-red-400" />
                   </div>
-                  <p className="font-medium">Practice with purpose</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Move from reference into drills.
+                  <p className="font-medium text-white">
+                    Practice with intention
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Use study references to support cleaner drills.
                   </p>
                 </CardContent>
               </Card>
@@ -107,103 +161,93 @@ export default function StylesList() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium">Browse styles</p>
-            <p className="text-sm text-muted-foreground">
-              Search by name, definition, or tags.
-            </p>
-          </div>
-
-          <div className="relative w-full sm:max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search styles..."
-              className="pl-9"
-            />
-          </div>
+        <section className="rounded-3xl border border-red-500/12 bg-red-500/5 p-4">
+          <p className="text-sm leading-6 text-zinc-300">
+            <span className="font-semibold text-white">Free access:</span> 6
+            core styles to build broad foundation first.
+            <span className="ml-2 font-semibold text-white">
+              Later tiers:
+            </span>{" "}
+            more styles, deeper drills, stronger AI guidance, and expanded study
+            tracks.
+          </p>
         </section>
 
-        {filteredStyles.length === 0 ? (
-          <Card className="rounded-3xl border-dashed shadow-none">
-            <CardContent className="flex min-h-[220px] flex-col items-center justify-center p-8 text-center">
-              <p className="text-lg font-semibold">No styles found</p>
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                Try a different search term or clear the search to view the full
-                style library.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredStyles.map((style) => (
-              <Link key={style.id} href={`/styles/${style.id}`}>
-                <Card
-                  className="group h-full cursor-pointer overflow-hidden rounded-3xl border-2 border-border transition-all duration-300 hover:border-primary hover:shadow-lg"
-                  data-testid={`card-style-${style.id}`}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                    <img
-                      src={style.previewImage}
-                      alt={style.name}
-                      className="h-full w-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {displayStyles.map((style) => (
+            <Link key={style.id} href={`/styles/${style.id}`}>
+              <Card
+                className="group h-full cursor-pointer overflow-hidden rounded-3xl border border-white/8 bg-card shadow-none transition-all duration-300 hover:border-red-500/30"
+                data-testid={`card-style-${style.id}`}
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-zinc-900">
+                  <img
+                    src={style.previewImage}
+                    alt={style.name}
+                    className="h-full w-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {(style.tags || []).slice(0, 3).map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="border-0 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <h3 className="text-2xl font-display font-bold text-white">
-                        {style.name}
-                      </h3>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {style.tags.slice(0, 3).map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="border-0 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
+
+                    <h3 className="text-2xl font-semibold text-white">
+                      {style.name}
+                    </h3>
                   </div>
+                </div>
 
-                  <CardContent className="space-y-4 p-5">
-                    <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
-                      {style.definition}
-                    </p>
+                <CardContent className="space-y-4 p-5">
+                  <p className="line-clamp-3 text-sm leading-6 text-zinc-400">
+                    {style.definition}
+                  </p>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="rounded-full">
-                        Study
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full">
-                        Rules
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full">
-                        Drills
-                      </Badge>
-                    </div>
-                  </CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-white/10 text-zinc-300"
+                    >
+                      Study Guide
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-white/10 text-zinc-300"
+                    >
+                      Rules
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-white/10 text-zinc-300"
+                    >
+                      AI Flash Prompt
+                    </Badge>
+                  </div>
+                </CardContent>
 
-                  <CardFooter className="flex items-center justify-between p-5 pt-0">
-                    <span className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                      Open study page
-                    </span>
+                <CardFooter className="flex items-center justify-between p-5 pt-0">
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    Open study page
+                  </span>
 
-                    <span className="flex items-center gap-1 text-sm font-bold transition-transform group-hover:translate-x-1">
-                      View
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </CardFooter>
-                </Card>
-              </Link>
-            ))}
-          </section>
-        )}
+                  <span className="flex items-center gap-1 text-sm font-semibold text-white transition-transform group-hover:translate-x-1">
+                    View
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </CardFooter>
+              </Card>
+            </Link>
+          ))}
+        </section>
       </div>
     </Layout>
   );

@@ -12,7 +12,7 @@ import {
   Eye,
   AlertTriangle,
 } from "lucide-react";
-import AICoachPanel from "../components/AICoachPanel";
+import AICoachPanel, { type CoachOption } from "../components/AICoachPanel";
 
 const defaultStyles = ["Traditional", "Black & Grey", "Japanese", "Lettering"];
 const defaultFocuses = ["Linework", "Shading", "Composition"];
@@ -66,7 +66,7 @@ export default function Practice() {
   }, [location]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
@@ -95,6 +95,96 @@ export default function Practice() {
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  const coachOptions = useMemo<CoachOption[]>(() => {
+    const baseOptions: CoachOption[] = [
+      {
+        id: "what-is-this-page-for",
+        label: "What should I do here?",
+        answer:
+          "Use Practice to train one skill with intention.\n\nThis page is for repetition, cleaner execution, and stronger habits. Do not treat it like random drawing time. Pick a focus, compare your reps, and improve one thing at a time.",
+      },
+      {
+        id: "how-should-i-practice",
+        label: "How should I practice?",
+        answer:
+          "Keep the session simple.\n\nChoose one focus, work slowly, and aim for cleaner reps instead of more reps. Strong tattoo habits come from consistency, not rushing. Broad foundation first, specialization later.",
+      },
+      {
+        id: "how-does-this-help",
+        label: "How does this help apprenticeship prep?",
+        answer:
+          "This helps you become more teachable.\n\nBetter practice improves line control, design clarity, and discipline. InkPlan is here to prepare you for a real apprenticeship, not replace one.",
+      },
+    ];
+
+    if (selectedFocus === "Linework") {
+      return [
+        {
+          id: "linework-start",
+          label: "What matters most in linework?",
+          answer:
+            "The biggest goal is one clean, confident pass.\n\nAvoid hesitation, random depth changes, and tracing back over weak lines. Cleaner execution matters more than trying to look advanced.",
+        },
+        {
+          id: "linework-mistakes",
+          label: "What linework mistakes should I watch for?",
+          answer:
+            "Watch for wobble, hesitation, uneven depth, and repeated correction.\n\nIf your lines look weak or blown out compared to the examples, slow down and focus on control before speed.",
+        },
+        {
+          id: "linework-session",
+          label: "How should I structure this session?",
+          answer:
+            "Work on one repeatable exercise.\n\nPractice straight lines, curves, corners, and clean starts and stops. Review what improved before moving on. Do not bounce between too many goals.",
+        },
+      ];
+    }
+
+    if (selectedFocus === "Shading") {
+      return [
+        {
+          id: "shading-start",
+          label: "What matters most in shading?",
+          answer:
+            "Focus on smooth value control and readable separation.\n\nDo not overwork the same area. Build values gradually and make sure the shading supports the design instead of muddying it.",
+        },
+        {
+          id: "shading-mistakes",
+          label: "What shading mistakes should I avoid?",
+          answer:
+            "Avoid patchiness, muddy transitions, and making every area the same tone.\n\nIf the piece loses clarity, your shading is overpowering the structure instead of supporting it.",
+        },
+        {
+          id: "shading-session",
+          label: "How should I practice shading today?",
+          answer:
+            "Keep the practice narrow.\n\nTrain value transitions, soft fades, and clear separation between lights, mids, and darks. Do not try to solve everything in one session.",
+        },
+      ];
+    }
+
+    return [
+      {
+        id: "composition-start",
+        label: "What matters most in composition?",
+        answer:
+          "Clarity comes before detail.\n\nA strong composition reads quickly, has a clear focal area, and guides the eye naturally. If everything competes equally, the design gets weaker.",
+      },
+      {
+        id: "composition-mistakes",
+        label: "What composition mistakes should I avoid?",
+        answer:
+          "Avoid crowding, weak hierarchy, and adding detail before the layout works.\n\nIf the design feels confusing at a glance, simplify before refining.",
+      },
+      {
+        id: "composition-session",
+        label: "How should I practice composition?",
+        answer:
+          "Start by checking the design at a distance.\n\nLook at silhouette, spacing, focal flow, and readability before adding extra detail. Good arrangement beats busy complexity.",
+      },
+    ];
+  }, [selectedFocus]);
 
   const practiceContent = useMemo<ExampleContent>(() => {
     if (selectedStyle === "Traditional" && selectedFocus === "Linework") {
@@ -470,7 +560,11 @@ export default function Practice() {
           </div>
         </section>
 
-        <AICoachPanel style={selectedStyle} focus={selectedFocus} />
+        <AICoachPanel
+          title="Practice Coach"
+          subtitle="Pick a question for focused guidance on this practice session."
+          options={coachOptions}
+        />
 
         <Card className="rounded-3xl border shadow-sm">
           <CardContent className="space-y-6 p-6 text-center">

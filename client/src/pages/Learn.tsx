@@ -1,126 +1,94 @@
 import Layout from "@/components/Layout";
-import AITattooCoachWindow from "@/components/ai/AITattooCoachWindow";
+import AICoachPanel, { type CoachOption } from "@/components/AICoachPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  GraduationCap,
-  BookOpen,
-  Layers3,
-  ArrowRight,
-  Clock3,
-  Brush,
-  Sparkles,
-} from "lucide-react";
+import { BookOpen, GraduationCap, PenTool, Target } from "lucide-react";
 
-const learningSections = [
+const coachOptions: CoachOption[] = [
   {
-    title: "Fundamentals",
+    id: "what-is-this-page",
+    label: "What is this page for?",
+    answer:
+      "This page is for building tattoo understanding before execution.\n\nUse Learn to study why strong tattoos work: readability, shape, flow, and decision-making. This should make your practice more intentional, not random.",
+  },
+  {
+    id: "how-should-i-use-it",
+    label: "How should I use this page?",
+    answer:
+      "Go one concept at a time.\n\nStudy the lesson, understand the principle, then apply it on the Practice page. Do not rush through everything just to feel productive.",
+  },
+  {
+    id: "why-does-it-matter",
+    label: "Why does this matter?",
+    answer:
+      "Strong fundamentals make you easier to teach later.\n\nInkPlan is here to help you become more apprenticeship-ready by improving your eye, discipline, and design understanding before you ever touch real skin professionally.",
+  },
+];
+
+const lessonCards = [
+  {
+    title: "Readability",
     description:
-      "Core tattoo knowledge, setup habits, terminology, machine basics, and foundational learning.",
+      "A tattoo should read clearly at a glance. If the design is confusing from a distance, it usually gets weaker on skin.",
     icon: BookOpen,
-    status: "Available now",
   },
   {
-    title: "Technique",
+    title: "Shape Language",
     description:
-      "Linework, shading, depth control, hand speed, consistency, and practice structure.",
-    icon: Brush,
-    status: "Available now",
+      "Big shapes carry the design first. Small details only work when the core forms are already strong and balanced.",
+    icon: Target,
   },
   {
-    title: "Curriculum Paths",
+    title: "Flow",
     description:
-      "Structured learning tracks that will guide users from beginner stages into advanced growth.",
-    icon: Layers3,
-    status: "In progress",
+      "The eye should move naturally through the design. Good flow helps tattoos feel intentional instead of stiff or crowded.",
+    icon: PenTool,
   },
 ];
 
 export default function Learn() {
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-primary">
-            Learn
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            Main curriculum hub
-          </h1>
-          <p className="mt-2 max-w-3xl text-muted-foreground">
-            This is the education home for InkPlan. It will grow into the main
-            place where users explore lessons, follow structured learning paths,
-            and build real tattoo knowledge over time.
-          </p>
-        </div>
-
-        <Card className="overflow-hidden border-border shadow-sm">
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Meet your AI Tattoo Coach
-              </CardTitle>
-            </CardHeader>
-          </div>
-          <CardContent className="space-y-4 pt-6">
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Ask questions about linework, shading, fake skin practice, machine
-              control, posture, stretch, and what to focus on next. This is the
-              first step toward turning InkPlan into a guided learning
-              experience instead of just a set of tools.
-            </p>
-
-            <AITattooCoachWindow />
-          </CardContent>
-        </Card>
-
-        <Card className="border-border shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              Learn overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm leading-6 text-muted-foreground">
-              During build phase, this page stays visible so you can design and
-              test the curriculum experience without subscription restrictions
-              getting in the way.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-                <Clock3 className="h-3.5 w-3.5" />
-                Build mode visible
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-                <ArrowRight className="h-3.5 w-3.5" />
-                Tier gating can be re-added later
-              </div>
+      <div className="space-y-8">
+        <section className="rounded-3xl border bg-card p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-primary">
+                Learn
+              </p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                Build tattoo fundamentals before execution
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                Learn is where you train your eye. Focus on readability, shape,
+                flow, and strong visual decisions before trying to force
+                advanced execution too early.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {learningSections.map((section) => {
-            const Icon = section.icon;
+        <AICoachPanel
+          title="Learn Coach"
+          subtitle="Understand the fundamentals before applying them."
+          options={coachOptions}
+        />
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {lessonCards.map((lesson) => {
+            const Icon = lesson.icon;
 
             return (
-              <Card key={section.title} className="border-border shadow-sm">
-                <CardHeader className="space-y-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <Card key={lesson.title} className="rounded-3xl border shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{section.title}</CardTitle>
-                    <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {section.status}
-                    </p>
-                  </div>
+                    {lesson.title}
+                  </CardTitle>
                 </CardHeader>
+
                 <CardContent>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    {section.description}
+                    {lesson.description}
                   </p>
                 </CardContent>
               </Card>
@@ -128,48 +96,22 @@ export default function Learn() {
           })}
         </div>
 
-        <Card className="border-border shadow-sm">
-          <CardHeader>
-            <CardTitle>What this page will become</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Curriculum categories
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Organized lesson groups like fundamentals, style study,
-                technique, business, culture, and professional development.
-              </p>
+        <Card className="rounded-3xl border shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-center gap-2 font-semibold">
+              <GraduationCap className="h-4 w-4 text-primary" />
+              Apprenticeship prep mindset
             </div>
 
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Guided progression
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                A clear path showing what users should start with, what comes
-                next, and how their learning evolves over time.
+            <div className="space-y-2 text-sm leading-6 text-muted-foreground">
+              <p>• InkPlan does not replace a real apprenticeship.</p>
+              <p>
+                • It helps you build stronger design awareness, better practice
+                habits, and better portfolio readiness first.
               </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Lesson cards
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Each lesson can later show completion state, estimated duration,
-                level, and access tier without breaking the overall layout.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Future tier controls
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Locked and unlocked states can be added back later once the
-                Stripe flow and subscription handling are fully wired.
+              <p>
+                • The goal is to become more teachable, more disciplined, and
+                more prepared when a real opportunity comes.
               </p>
             </div>
           </CardContent>

@@ -1,114 +1,78 @@
-import { useEffect, useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-const STORAGE_KEY = "inkplan_ai_context";
-
-type LessonContext = {
-  lessonKey: string;
+export type CoachOption = {
+  id: string;
+  label: string;
+  answer: string;
 };
 
 type Props = {
-  style?: string;
-  focus?: string;
+  title?: string;
+  subtitle?: string;
+  options: CoachOption[];
 };
 
-function getCoach({
-  lesson,
-  style,
-  focus,
-}: {
-  lesson?: string;
-  style?: string;
-  focus?: string;
-}) {
-  // 🔥 LINEWORK (MOST IMPORTANT)
-  if (focus === "Linework") {
-    return {
-      title: "Linework Coaching",
-      points: [
-        "If your lines look like the bad examples, you're likely hesitating mid stroke.",
-        "If you see spreading like the blowout images, you're going too deep.",
-        "If your lines look faint like the shallow examples, you're not hitting the dermis.",
-        "Focus on one clean pass — not correcting lines after.",
-      ],
-    };
+export default function AICoachPanel({
+  title = "InkPlan AI Coach",
+  subtitle = "Select a question for focused guidance on this page.",
+  options,
+}: Props) {
+  const [activeId, setActiveId] = useState<string>(options[0]?.id ?? "");
+
+  const activeOption = useMemo(() => {
+    return options.find((option) => option.id === activeId) ?? options[0];
+  }, [activeId, options]);
+
+  if (!options.length) {
+    return null;
   }
-
-  // 🔥 SHADING
-  if (focus === "Shading") {
-    return {
-      title: "Shading Coaching",
-      points: [
-        "If your shading looks patchy, you're not building value evenly.",
-        "If it looks muddy, you're overworking the same area.",
-        "Compare your work to the examples — aim for clear value separation.",
-      ],
-    };
-  }
-
-  // 🔥 LESSON BASED
-  if (lesson?.includes("readability")) {
-    return {
-      title: "Readability Check",
-      points: [
-        "If the design feels confusing, simplify before adding detail.",
-        "Look at your work from a distance — does it read clearly?",
-      ],
-    };
-  }
-
-  if (lesson?.includes("flow")) {
-    return {
-      title: "Flow Check",
-      points: [
-        "If your eye gets stuck in one area, your flow is off.",
-        "Adjust spacing and direction to guide movement.",
-      ],
-    };
-  }
-
-  // DEFAULT
-  return {
-    title: "Practice Coaching",
-    points: [
-      "Compare your work to the examples on this page.",
-      "Identify one mistake and fix it — don’t try to fix everything.",
-      "Clean execution beats more reps.",
-    ],
-  };
-}
-
-export default function AICoachPanel({ style, focus }: Props) {
-  const [lesson, setLesson] = useState<string | undefined>();
-
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        setLesson(parsed.lessonKey);
-      } catch {}
-    }
-  }, []);
-
-  const coach = useMemo(() => {
-    return getCoach({ lesson, style, focus });
-  }, [lesson, style, focus]);
 
   return (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardContent className="p-5 space-y-3">
-        <div className="flex items-center gap-2 font-semibold">
-          <Sparkles className="h-4 w-4" />
-          {coach.title}
+    <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-sm">
+      <CardContent className="space-y-5 p-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {title}
+          </div>
+
+          <p className="text-sm leading-6 text-muted-foreground">{subtitle}</p>
         </div>
 
-        {coach.points.map((p) => (
-          <p key={p} className="text-sm text-muted-foreground">
-            • {p}
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => {
+            const isActive = option.id === activeOption?.id;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setActiveId(option.id)}
+                className={[
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted",
+                ].join(" ")}
+              >
+                <ChevronRight className="h-4 w-4" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-2xl border bg-background p-4">
+          <p className="mb-2 text-sm font-medium text-foreground">
+            {activeOption?.label}
           </p>
-        ))}
+
+          <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
+            {activeOption?.answer}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
