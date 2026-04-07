@@ -8,6 +8,8 @@ import {
   BookOpen,
   PenTool,
   Library,
+  BarChart3,
+  Sparkles,
   Menu,
   LogOut,
 } from "lucide-react";
@@ -48,6 +50,8 @@ export default function Layout({ children }: LayoutProps) {
     { label: "Styles", href: "/styles", icon: BookOpen },
     { label: "Practice", href: "/practice", icon: PenTool },
     { label: "Library", href: "/library", icon: Library },
+    { label: "Progress", href: "/progress", icon: BarChart3 },
+    { label: "Upgrade", href: "/upgrade", icon: Sparkles },
   ];
 
   const userLabel = getUserLabel(user?.email);
@@ -73,13 +77,32 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
-  const SidebarContent = (
-    <div className="flex h-full flex-col bg-white">
-      <div className="border-b border-slate-200 px-6 py-4">
-        <h1 className="text-lg font-semibold tracking-tight">INKPLAN</h1>
+  const sidebarContent = (
+    <div className="flex h-full flex-col bg-card text-card-foreground">
+      <div className="border-b border-border px-5 py-5">
+        <button
+          type="button"
+          onClick={() => handleNavigate("/dashboard")}
+          className="flex items-center gap-3 text-left transition-opacity hover:opacity-90"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+            <span className="text-sm font-semibold tracking-[0.16em] text-red-400">
+              IP
+            </span>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+              InkPlan
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Apprenticeship prep platform
+            </p>
+          </div>
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-2 px-3 py-4">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
@@ -89,68 +112,104 @@ export default function Layout({ children }: LayoutProps) {
               key={item.href}
               type="button"
               onClick={() => handleNavigate(item.href)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+              className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-black text-white"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-red-600 text-white shadow-[0_10px_30px_rgba(220,38,38,0.22)]"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="space-y-4 border-t border-slate-200 p-4">
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <LogOut className="h-4 w-4" />
-          {isLoggingOut ? "Logging out..." : "Logout"}
-        </button>
+      <div className="space-y-3 border-t border-border p-4">
+        <div className="rounded-2xl border border-white/6 bg-white/[0.03] px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 border border-white/10">
+              <AvatarFallback className="bg-zinc-900 text-sm text-white">
+                {avatarLetter}
+              </AvatarFallback>
+            </Avatar>
 
-        <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>{avatarLetter}</AvatarFallback>
-          </Avatar>
-
-          <div className="min-w-0 text-xs">
-            <p className="truncate font-medium text-slate-900">{userLabel}</p>
-            <p className="text-slate-500">Free Plan</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">
+                {userLabel}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Free Plan</p>
+            </div>
           </div>
         </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="w-full justify-start rounded-2xl px-4 py-6 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="mr-3 h-4 w-4 shrink-0" />
+          {isLoggingOut ? "Logging out..." : "Log out"}
+        </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
-        <h1 className="text-lg font-semibold tracking-tight">INKPLAN</h1>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="border-b border-border bg-card lg:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            type="button"
+            onClick={() => handleNavigate("/dashboard")}
+            className="flex items-center gap-3 text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+              <span className="text-xs font-semibold tracking-[0.16em] text-red-400">
+                IP
+              </span>
+            </div>
 
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button type="button" variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+                InkPlan
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Apprenticeship prep
+              </p>
+            </div>
+          </button>
 
-          <SheetContent side="left" className="w-72 p-0">
-            {SidebarContent}
-          </SheetContent>
-        </Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/5"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+
+            <SheetContent
+              side="left"
+              className="w-72 border-r border-border bg-card p-0"
+            >
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 border-r border-slate-200 bg-white lg:block">
-          {SidebarContent}
+        <aside className="hidden w-72 border-r border-border bg-card lg:block">
+          {sidebarContent}
         </aside>
 
-        <main className="flex-1 px-6 py-6 lg:px-10">
+        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

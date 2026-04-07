@@ -224,116 +224,122 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 text-white shadow-2xl">
         <button
           type="button"
           onClick={() => {
             resetForm();
             onClose();
           }}
-          className="absolute right-4 top-4 text-gray-500 hover:text-black"
+          className="absolute right-4 top-4 z-10 text-zinc-400 transition hover:text-white"
         >
           <X size={18} />
         </button>
 
-        <h2 className="mb-4 text-2xl font-bold text-black">
-          {mode === "signin" ? "Sign In" : "Create Account"}
-        </h2>
+        <div className="max-h-[90vh] overflow-y-auto p-6">
+          <h2 className="mb-1 text-2xl font-semibold text-white">
+            {mode === "signin" ? "Sign In" : "Create Account"}
+          </h2>
 
-        <div className="mb-4 flex rounded-md border border-gray-300 p-1">
-          <button
-            type="button"
-            onClick={() => switchMode("signin")}
-            className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
-              mode === "signin"
-                ? "bg-black text-white"
-                : "bg-transparent text-black"
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode("signup")}
-            className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
-              mode === "signup"
-                ? "bg-black text-white"
-                : "bg-transparent text-black"
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+          <p className="mb-4 text-sm text-zinc-400">
+            Enter InkPlan and keep building with intention.
+          </p>
 
-        <div className="space-y-3">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
-            disabled={loading}
-          />
+          <div className="mb-4 flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+            <button
+              type="button"
+              onClick={() => switchMode("signin")}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                mode === "signin"
+                  ? "bg-red-600 text-white"
+                  : "bg-transparent text-zinc-400 hover:text-white"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                mode === "signup"
+                  ? "bg-red-600 text-white"
+                  : "bg-transparent text-zinc-400 hover:text-white"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
-            disabled={loading}
-          />
-
-          {mode === "signup" && (
+          <div className="space-y-3">
             <input
-              type="password"
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-black"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-red-500/60"
               disabled={loading}
             />
-          )}
 
-          {errorMessage ? (
-            <p className="text-sm text-red-600">{errorMessage}</p>
-          ) : null}
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-red-500/60"
+              disabled={loading}
+            />
 
-          <Button
-            type="button"
-            onClick={handleEmailAuth}
-            disabled={loading}
-            className="w-full"
-          >
-            {loading
-              ? "Please wait..."
-              : mode === "signin"
-                ? "Continue with Email"
-                : "Create Account"}
-          </Button>
+            {mode === "signup" && (
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-red-500/60"
+                disabled={loading}
+              />
+            )}
 
-          <div className="my-2 text-center text-sm text-gray-500">or</div>
+            {errorMessage ? (
+              <p className="text-sm text-red-400">{errorMessage}</p>
+            ) : null}
 
-          <Button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            variant="outline"
-            className="w-full"
-          >
-            Continue with Google
-          </Button>
+            <Button
+              type="button"
+              onClick={handleEmailAuth}
+              disabled={loading}
+              className="w-full bg-red-600 text-white hover:bg-red-500"
+            >
+              {loading
+                ? "Please wait..."
+                : mode === "signin"
+                  ? "Continue with Email"
+                  : "Create Account"}
+            </Button>
 
-          <Button
-            type="button"
-            onClick={handleGuestLogin}
-            disabled={loading}
-            variant="outline"
-            className="w-full"
-          >
-            Continue as Guest
-          </Button>
+            <div className="my-1 text-center text-sm text-zinc-500">or</div>
+
+            <Button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              variant="outline"
+              className="w-full border-white/10 bg-transparent text-white hover:bg-white/5"
+            >
+              Continue with Google
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleGuestLogin}
+              disabled={loading}
+              variant="outline"
+              className="w-full border-white/10 bg-transparent text-white hover:bg-white/5"
+            >
+              Continue as Guest
+            </Button>
+          </div>
         </div>
       </div>
     </div>
