@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@google/genai": "^1.48.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@octokit/rest": "^21.1.1",
@@ -113,8 +114,5 @@
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
     "vite": "^7.1.9"
-  },
-  "optionalDependencies": {
-    "bufferutil": "^4.0.8"
   }
 }

@@ -1,413 +1,317 @@
-"use client";
-
-import { useMemo } from "react";
-import { useLocation } from "wouter";
-import {
-  ArrowRight,
-  BookOpen,
-  Crown,
-  Lock,
-  PenTool,
-  Sparkles,
-  Star,
-} from "lucide-react";
-
 import Layout from "@/components/Layout";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProfile } from "@/hooks/use-api";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  CheckCircle,
+  Link as LinkIcon,
+} from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
-type PlanTier = "free" | "pro" | "premium";
-
-type LibraryItem = {
-  title: string;
-  category: string;
-  description: string;
-  tier: PlanTier;
-  href?: string;
-};
-
-const libraryItems: LibraryItem[] = [
-  {
-    title: "Foundational Linework Reference",
-    category: "Free",
-    description: "Core reference material to build consistency and confidence.",
-    tier: "free",
-    href: "/library/reference-packs",
-  },
-  {
-    title: "Basic Shading Study Set",
-    category: "Free",
-    description:
-      "Useful, practical studies that help new artists start sharpening control.",
-    tier: "free",
-    href: "/library/flash-studies",
-  },
-  {
-    title: "Composition Starter Pack",
-    category: "Free",
-    description:
-      "Simple layout references that introduce stronger tattoo design structure.",
-    tier: "free",
-    href: "/library/fundamentals",
-  },
-  {
-    title: "Pro Style Breakdown Collection",
-    category: "Pro",
-    description:
-      "A deeper study library for artists who want more refined visual analysis.",
-    tier: "pro",
-  },
-  {
-    title: "Advanced Black & Grey Reference Vault",
-    category: "Pro",
-    description:
-      "Higher-value study material designed for artists ready to level up faster.",
-    tier: "pro",
-  },
-  {
-    title: "Premium Master Reference Archive",
-    category: "Premium",
-    description:
-      "The highest-tier content experience with premium-only reference access.",
-    tier: "premium",
-  },
-  {
-    title: "Elite Study Packs",
-    category: "Premium",
-    description:
-      "Curated premium material meant to feel like the real InkPlan advantage.",
-    tier: "premium",
-  },
+const practicePrompts = [
+  "Draw a dagger piercing a heart with a banner that says 'MOM' using only black ink.",
+  "Build a strong traditional rose using only clear shape language and bold contrast.",
+  "Sketch a snake wrapping around a dagger with readable flow and balanced spacing.",
+  "Create a black and grey skull study focused on light source and clean value separation.",
+  "Design a panther head with aggressive movement and simple, powerful silhouettes.",
+  "Practice a script nameplate with supporting flourishes that stay readable at tattoo scale.",
 ];
 
-function tierRank(tier: PlanTier) {
-  if (tier === "premium") return 3;
-  if (tier === "pro") return 2;
-  return 1;
+const defaultStyles = ["Traditional", "Black & Grey", "Japanese", "Lettering"];
+const defaultFocuses = ["Linework", "Shading", "Composition", "Flash Redraw"];
+
+type ProgressMap = Record<string, number>;
+
+function getQueryParams() {
+  if (typeof window === "undefined") {
+    return {
+      style: "",
+      focus: "",
+      duration: "",
+      prompt: "",
+    };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    style: params.get("style") || "",
+    focus: params.get("focus") || "",
+    duration: params.get("duration") || "",
+    prompt: params.get("prompt") || "",
+  };
 }
 
-export default function Library() {
-  const [, setLocation] = useLocation();
-  const { data: profile, isLoading } = useProfile();
+export default function Practice() {
+  const [location] = useLocation();
 
-  const currentPlan = (profile?.subscriptionTier ?? "free") as PlanTier;
+  const [duration, setDuration] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [promptIndex, setPromptIndex] = useState(0);
 
-  const visibleItems = useMemo(() => {
-    return libraryItems.map((item) => {
-      const locked = tierRank(item.tier) > tierRank(currentPlan);
-      return {
-        ...item,
-        locked,
-      };
-    });
-  }, [currentPlan]);
+  const [selectedStyle, setSelectedStyle] = useState(defaultStyles[0]);
+  const [selectedFocus, setSelectedFocus] = useState(defaultFocuses[0]);
+  const [customPrompt, setCustomPrompt] = useState("");
 
-  const unlockedCount = visibleItems.filter((item) => !item.locked).length;
-  const lockedCount = visibleItems.filter((item) => item.locked).length;
+  const [styleOptions, setStyleOptions] = useState(defaultStyles);
+  const [focusOptions, setFocusOptions] = useState(defaultFocuses);
 
-  const upgradeLabel =
-    currentPlan === "free"
-      ? "Upgrade to Pro"
-      : currentPlan === "pro"
-        ? "Upgrade to Premium"
-        : "Premium Active";
+  const [progress, setProgress] = useState<ProgressMap>({});
 
-  function handleUpgradeClick() {
-    setLocation("/upgrade");
-  }
+  useEffect(() => {
+    const stored = localStorage.getItem("inkplan_progress");
+    if (stored) {
+      try {
+        setProgress(JSON.parse(stored));
+      } catch {
+        setProgress({});
+      }
+    }
+  }, []);
 
-  function handleItemClick(item: (typeof visibleItems)[number]) {
-    if (item.locked) {
-      setLocation("/upgrade");
-      return;
+  useEffect(() => {
+    localStorage.setItem("inkplan_progress", JSON.stringify(progress));
+  }, [progress]);
+
+  useEffect(() => {
+    const query = getQueryParams();
+
+    if (query.style) {
+      setSelectedStyle(query.style);
+      setStyleOptions((prev) =>
+        prev.includes(query.style) ? prev : [...prev, query.style],
+      );
     }
 
-    if (item.href) {
-      setLocation(item.href);
+    if (query.focus) {
+      setSelectedFocus(query.focus);
+      setFocusOptions((prev) =>
+        prev.includes(query.focus) ? prev : [...prev, query.focus],
+      );
     }
-  }
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="space-y-6">
-          <div className="h-8 w-48 animate-pulse rounded-lg bg-muted" />
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-56 animate-pulse rounded-3xl border bg-muted/40"
-              />
-            ))}
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+    if (query.duration) {
+      const parsedDuration = Number(query.duration);
+      if (
+        !Number.isNaN(parsedDuration) &&
+        parsedDuration >= 1 &&
+        parsedDuration <= 60
+      ) {
+        setDuration(parsedDuration);
+        setTimeLeft(parsedDuration * 60);
+      }
+    }
+
+    if (query.prompt) {
+      setCustomPrompt(query.prompt);
+    } else {
+      setCustomPrompt("");
+    }
+
+    setIsActive(false);
+  }, [location]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsActive(false);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  const toggleTimer = () => setIsActive((prev) => !prev);
+
+  const resetTimer = () => {
+    setIsActive(false);
+    setTimeLeft(duration * 60);
+  };
+
+  const handleDurationChange = (val: number[]) => {
+    const nextDuration = val[0];
+    setDuration(nextDuration);
+    setTimeLeft(nextDuration * 60);
+    setIsActive(false);
+  };
+
+  const handleNewPrompt = () => {
+    setPromptIndex((prev) => (prev + 1) % practicePrompts.length);
+    setCustomPrompt("");
+  };
+
+  const completeSession = () => {
+    const hours = duration / 60;
+
+    setProgress((prev) => ({
+      ...prev,
+      [selectedStyle]: (prev[selectedStyle] || 0) + hours,
+    }));
+
+    resetTimer();
+  };
+
+  const progressPercent = useMemo(() => {
+    const total = duration * 60;
+    if (total <= 0) return 0;
+    return ((total - timeLeft) / total) * 100;
+  }, [duration, timeLeft]);
+
+  const activePrompt = customPrompt || practicePrompts[promptIndex];
+  const cameFromDrill =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("style");
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <section className="rounded-3xl border bg-gradient-to-b from-background to-muted/30 p-6 shadow-sm sm:p-8">
-          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr] lg:items-center">
-            <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
-                <BookOpen className="h-4 w-4 text-primary" />
-                Library
+      <div className="mx-auto max-w-6xl space-y-8 py-8">
+        <section className="flex flex-col items-start justify-between gap-4 rounded-3xl border bg-card p-6 shadow-sm md:flex-row md:items-center">
+          <div className="flex flex-wrap gap-4">
+            <select
+              value={selectedStyle}
+              onChange={(e) => setSelectedStyle(e.target.value)}
+              className="rounded-lg border bg-background px-3 py-2"
+            >
+              {styleOptions.map((style) => (
+                <option key={style} value={style}>
+                  {style}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedFocus}
+              onChange={(e) => setSelectedFocus(e.target.value)}
+              className="rounded-lg border bg-background px-3 py-2"
+            >
+              {focusOptions.map((focus) => (
+                <option key={focus} value={focus}>
+                  {focus}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="text-sm font-mono text-muted-foreground">
+            {selectedStyle} • {selectedFocus}
+          </div>
+        </section>
+
+        {cameFromDrill ? (
+          <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-none">
+            <CardContent className="flex items-start gap-3 p-5">
+              <LinkIcon className="mt-0.5 h-5 w-5 text-primary" />
+              <div>
+                <p className="font-semibold">
+                  Practice loaded from a style drill
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your style, focus, duration, and prompt were preselected from
+                  the study page. You can still customize this session before
+                  you start.
+                </p>
               </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Study what you can access now. See what unlocks next.
-              </h1>
-
-              <p className="mt-4 max-w-2xl text-muted-foreground">
-                The InkPlan Library is designed to make free users feel
-                supported, while clearly showing how much more valuable Pro and
-                Premium become as you level up.
-              </p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border bg-background px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Current plan
-                  </p>
-                  <p className="mt-1 text-base font-semibold capitalize">
-                    {currentPlan}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border bg-background px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Available now
-                  </p>
-                  <p className="mt-1 text-base font-semibold">
-                    {unlockedCount} items
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border bg-background px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Locked
-                  </p>
-                  <p className="mt-1 text-base font-semibold">
-                    {lockedCount} items
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <Card className="rounded-3xl border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Crown className="h-5 w-5 text-primary" />
-                  Upgrade path
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="rounded-2xl border bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Free</p>
-                  <p className="mt-1 font-medium">Core reference access</p>
-                </div>
-
-                <div className="rounded-2xl border bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Pro</p>
-                  <p className="mt-1 font-medium">
-                    Expanded study depth and stronger learning flow
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Premium</p>
-                  <p className="mt-1 font-medium">
-                    Best reference experience inside InkPlan
-                  </p>
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={handleUpgradeClick}
-                  disabled={currentPlan === "premium"}
-                >
-                  {upgradeLabel}
-                  {currentPlan !== "premium" ? (
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  ) : null}
-                </Button>
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {styleOptions.map((style) => (
+            <Card key={style}>
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground">{style}</p>
+                <p className="text-xl font-bold">
+                  {(progress[style] || 0).toFixed(1)} hrs
+                </p>
               </CardContent>
             </Card>
-          </div>
+          ))}
         </section>
 
-        <section>
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-primary">
-                Content Library
-              </p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight">
-                Free content first. Premium value clearly visible.
-              </h2>
+        <Card className="relative overflow-hidden rounded-3xl border shadow-xl">
+          <div className="absolute left-0 top-0 h-1.5 w-full bg-muted">
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          <CardContent className="space-y-10 p-8 text-center md:p-10">
+            <div className="font-mono text-7xl font-bold text-primary md:text-8xl">
+              {formatTime(timeLeft)}
             </div>
 
-            {currentPlan !== "premium" ? (
-              <Button variant="outline" onClick={handleUpgradeClick}>
-                Unlock more
+            <div className="flex justify-center gap-4">
+              <Button onClick={toggleTimer} size="lg">
+                {isActive ? <Pause /> : <Play />}
               </Button>
-            ) : null}
-          </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {visibleItems.map((item) => (
-              <Card
-                key={item.title}
-                className={`relative overflow-hidden rounded-3xl border shadow-sm transition-all ${
-                  !item.locked ? "hover:border-primary hover:shadow-md" : ""
-                }`}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs text-muted-foreground">
-                        {item.category}
-                      </div>
-                      <CardTitle className="text-xl leading-tight">
-                        {item.title}
-                      </CardTitle>
-                    </div>
-
-                    {item.locked ? (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                        <Lock className="h-5 w-5 text-primary" />
-                      </div>
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <div className={item.locked ? "blur-[2px] opacity-70" : ""}>
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-
-                    <div className="mt-6 flex items-center gap-2 text-sm">
-                      {!item.locked ? (
-                        <>
-                          <Star className="h-4 w-4 text-primary" />
-                          <span className="font-medium">
-                            Available on your plan
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 text-primary" />
-                          <span className="font-medium">
-                            More depth available above your plan
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    {!item.locked && item.href ? (
-                      <Button
-                        className="mt-6 w-full"
-                        variant="outline"
-                        onClick={() => handleItemClick(item)}
-                      >
-                        Open section
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                </CardContent>
-
-                {item.locked ? (
-                  <div className="absolute inset-0 flex items-end bg-background/35 p-4 sm:p-6">
-                    <div className="w-full rounded-2xl border bg-background p-4 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium">
-                            Unlock with{" "}
-                            {item.tier === "pro" ? "Pro" : "Premium"}
-                          </p>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            Upgrade to access deeper study content and a
-                            stronger InkPlan experience.
-                          </p>
-                        </div>
-                        <Lock className="mt-1 h-4 w-4 text-primary" />
-                      </div>
-
-                      <Button
-                        className="mt-4 w-full"
-                        onClick={handleUpgradeClick}
-                      >
-                        {item.tier === "pro"
-                          ? "Upgrade to Pro"
-                          : "Upgrade to Premium"}
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-3xl border bg-muted/30 p-6 sm:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-sm font-medium text-primary">Why upgrade?</p>
-              <h3 className="mt-2 text-2xl font-bold tracking-tight">
-                Free helps you start. Pro and Premium are where InkPlan really
-                opens up.
-              </h3>
-              <p className="mt-4 max-w-2xl text-muted-foreground">
-                Your current plan should feel useful, but the locked content
-                should make the next step feel obvious. Better resources, more
-                depth, and a more complete creative workflow are what make
-                upgrading worth it.
-              </p>
+              <Button onClick={resetTimer} variant="outline">
+                <RotateCcw />
+              </Button>
             </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-2xl border bg-background p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <PenTool className="h-4 w-4 text-primary" />
-                  <p className="font-medium">Free</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Enough to build trust and momentum.
-                </p>
+            <div className="mx-auto max-w-md space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Duration</span>
+                <span className="text-muted-foreground">{duration} min</span>
               </div>
 
-              <div className="rounded-2xl border bg-background p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Star className="h-4 w-4 text-primary" />
-                  <p className="font-medium">Pro</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Better resources for users ready to take growth seriously.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-background p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-primary" />
-                  <p className="font-medium">Premium</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  The full premium experience with the strongest content
-                  perception.
-                </p>
-              </div>
+              <Slider
+                value={[duration]}
+                onValueChange={handleDurationChange}
+                max={60}
+                min={1}
+                step={1}
+              />
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <p className="text-sm font-mono text-muted-foreground">
+              PRACTICE PROMPT
+            </p>
+            <p>{activePrompt}</p>
+            <Button variant="outline" onClick={handleNewPrompt}>
+              New Prompt
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-3 p-6">
+            <p className="font-bold">Self Check</p>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Does it read clearly?</li>
+              <li>• Are lines confident?</li>
+              <li>• Is composition balanced?</li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Button className="h-14 w-full text-lg" onClick={completeSession}>
+          <CheckCircle className="mr-2" />
+          Mark Session Complete
+        </Button>
       </div>
     </Layout>
   );

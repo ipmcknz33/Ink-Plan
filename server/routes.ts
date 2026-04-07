@@ -2,15 +2,7 @@ import type { Express, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import type session from "express-session";
 import { storage } from "./storage";
-import { adminAuth } from "./firebaseAdmin";
-import { requireAuth } from "./middleware/requireAuth";
-import type { AuthenticatedRequest } from "./middleware/requireAuth";
-import {
-  insertUserProfileSchema,
-  insertDrawingSchema,
-  updateDrawingSchema,
-  insertProgressSchema,
-} from "@shared/schema";
+import { generateTattooCoachReply } from "./services/ai";
 
 type SessionWithUser = session.Session & {
   userId?: string;
@@ -18,6 +10,11 @@ type SessionWithUser = session.Session & {
 
 type RequestWithSession = Request & {
   session: SessionWithUser;
+  user?: {
+    id: string;
+    email: string;
+    createdAt?: Date | string;
+  };
 };
 
 function normalizeEmail(email: string) {
@@ -28,7 +25,11 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email);
 }
 
-function toSafeUser(user: any) {
+function toSafeUser(user: {
+  id: string;
+  email: string;
+  createdAt?: Date | string;
+}) {
   return {
     id: user.id,
     email: user.email,
@@ -36,47 +37,31 @@ function toSafeUser(user: any) {
   };
 }
 
-function getRouteParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value[0] ?? "";
-  }
-
-  return value ?? "";
-}
-
 async function ensureUserProfile(userId: string) {
   const existingProfile = await storage.getUserProfile(userId);
 
-  if (existingProfile) {
-    return existingProfile;
+  if (!existingProfile) {
+    await storage.createUserProfile(userId, {
+      subscriptionTier: "free",
+    });
   }
-
-  return storage.createUserProfile(userId, {});
 }
 
-export function registerRoutes(app: Express) {
-  // =========================
-  // AUTH
-  // =========================
-
+export async function registerRoutes(app: Express): Promise<void> {
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const request = req as RequestWithSession;
 
     try {
-      const { email, password } = request.body as {
-        email?: string;
-        password?: string;
-      };
+      const email = normalizeEmail(String(request.body?.email ?? ""));
+      const password = String(request.body?.password ?? "");
 
       if (!email || !password) {
         res.status(400).json({ error: "Email and password are required" });
         return;
       }
 
-      const normalizedEmail = normalizeEmail(email);
-
-      if (!isValidEmail(normalizedEmail)) {
-        res.status(400).json({ error: "Invalid email address" });
+      if (!isValidEmail(email)) {
+        res.status(400).json({ error: "Please enter a valid email" });
         return;
       }
 
@@ -87,17 +72,19 @@ export function registerRoutes(app: Express) {
         return;
       }
 
-      const existingUser = await storage.getUserByEmail(normalizedEmail);
+      const existingUser = await storage.getUserByEmail(email);
 
       if (existingUser) {
-        res.status(409).json({ error: "Email already in use" });
+        res
+          .status(409)
+          .json({ error: "An account with this email already exists" });
         return;
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
 
       const user = await storage.createUser({
-        email: normalizedEmail,
+        email,
         passwordHash,
       });
 
@@ -105,18 +92,20 @@ export function registerRoutes(app: Express) {
 
       request.session.userId = user.id;
 
-      request.session.save((err) => {
-        if (err) {
-          console.error("Register session save error:", err);
-          res.status(500).json({ error: "Failed to save session" });
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Register session save error:", saveError);
+          res.status(500).json({ error: "Failed to register user" });
           return;
         }
 
-        res.json(toSafeUser(user));
+        res.status(201).json({
+          user: toSafeUser(user),
+        });
       });
     } catch (error) {
       console.error("Register error:", error);
-      res.status(500).json({ error: "Register failed" });
+      res.status(500).json({ error: "Failed to register user" });
     }
   });
 
@@ -124,28 +113,25 @@ export function registerRoutes(app: Express) {
     const request = req as RequestWithSession;
 
     try {
-      const { email, password } = request.body as {
-        email?: string;
-        password?: string;
-      };
+      const email = normalizeEmail(String(request.body?.email ?? ""));
+      const password = String(request.body?.password ?? "");
 
       if (!email || !password) {
         res.status(400).json({ error: "Email and password are required" });
         return;
       }
 
-      const normalizedEmail = normalizeEmail(email);
-      const user = await storage.getUserByEmail(normalizedEmail);
+      const user = await storage.getUserByEmail(email);
 
-      if (!user || !user.passwordHash) {
-        res.status(401).json({ error: "Invalid credentials" });
+      if (!user) {
+        res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
-      const isMatch = await bcrypt.compare(password, user.passwordHash);
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
-      if (!isMatch) {
-        res.status(401).json({ error: "Invalid credentials" });
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
@@ -153,18 +139,20 @@ export function registerRoutes(app: Express) {
 
       request.session.userId = user.id;
 
-      request.session.save((err) => {
-        if (err) {
-          console.error("Login session save error:", err);
-          res.status(500).json({ error: "Failed to save session" });
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Login session save error:", saveError);
+          res.status(500).json({ error: "Failed to log in" });
           return;
         }
 
-        res.json(toSafeUser(user));
+        res.status(200).json({
+          user: toSafeUser(user),
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
-      res.status(500).json({ error: "Login failed" });
+      res.status(500).json({ error: "Failed to log in" });
     }
   });
 
@@ -172,379 +160,120 @@ export function registerRoutes(app: Express) {
     const request = req as RequestWithSession;
 
     try {
-      const guestEmail = `guest-${Date.now()}-${Math.random()
+      const guestEmail = `guest_${Date.now()}_${Math.random()
         .toString(36)
-        .slice(2, 8)}@guest.local`;
+        .slice(2, 8)}@inkplan.local`;
+
+      const guestPassword = Math.random().toString(36).repeat(2);
+      const passwordHash = await bcrypt.hash(guestPassword, 10);
 
       const user = await storage.createUser({
         email: guestEmail,
-        passwordHash: "guest-account",
+        passwordHash,
       });
 
       await ensureUserProfile(user.id);
 
       request.session.userId = user.id;
 
-      request.session.save((err) => {
-        if (err) {
-          console.error("Guest session save error:", err);
-          res.status(500).json({
-            error: "Failed to save guest session",
-            details: err.message,
-          });
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Guest session save error:", saveError);
+          res.status(500).json({ error: "Failed to create guest session" });
           return;
         }
 
-        console.log("Guest login success:", user.id, user.email);
-        res.json(toSafeUser(user));
-      });
-    } catch (error) {
-      console.error("Guest login FULL ERROR:", error);
-
-      const message =
-        error instanceof Error ? error.message : "Unknown guest login error";
-
-      res.status(500).json({
-        error: "Guest login failed",
-        details: message,
-      });
-    }
-  });
-
-  app.post("/api/auth/google", async (req: Request, res: Response) => {
-    const request = req as RequestWithSession;
-
-    try {
-      const { idToken } = request.body as { idToken?: string };
-
-      if (!idToken) {
-        res.status(400).json({ error: "Missing Google token" });
-        return;
-      }
-
-      const decoded = await adminAuth.verifyIdToken(idToken);
-      const email = normalizeEmail(decoded.email || "");
-
-      if (!email) {
-        res.status(400).json({ error: "Google account email not available" });
-        return;
-      }
-
-      let user = await storage.getUserByEmail(email);
-
-      if (!user) {
-        user = await storage.createUser({
-          email,
-          passwordHash: "google-auth-account",
+        res.status(201).json({
+          user: toSafeUser(user),
         });
-      }
-
-      await ensureUserProfile(user.id);
-
-      request.session.userId = user.id;
-
-      request.session.save((err) => {
-        if (err) {
-          console.error("Google session save error:", err);
-          res.status(500).json({ error: "Failed to save session" });
-          return;
-        }
-
-        res.json(toSafeUser(user));
       });
     } catch (error) {
-      console.error("Google auth error:", error);
-      res.status(401).json({ error: "Google login failed" });
-    }
-  });
-
-  app.get("/api/auth/me", async (req: Request, res: Response) => {
-    const request = req as RequestWithSession;
-
-    try {
-      if (!request.session.userId) {
-        res.status(200).json(null);
-        return;
-      }
-
-      const user = await storage.getUserById(request.session.userId);
-
-      if (!user) {
-        res.status(200).json(null);
-        return;
-      }
-
-      res.json(toSafeUser(user));
-    } catch (error) {
-      console.error("Me route error:", error);
-      res.status(500).json({ error: "Failed to fetch user" });
+      console.error("Guest auth error:", error);
+      res.status(500).json({ error: "Failed to continue as guest" });
     }
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     const request = req as RequestWithSession;
 
-    request.session.destroy((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        res.status(500).json({ error: "Logout failed" });
+    if (!request.session) {
+      res.clearCookie("inkplan.sid");
+      res.status(200).json({ message: "Logged out successfully" });
+      return;
+    }
+
+    request.session.destroy((destroyError) => {
+      if (destroyError) {
+        console.error("Logout error:", destroyError);
+        res.status(500).json({ error: "Failed to log out" });
         return;
       }
 
-      res.clearCookie("inkplan.sid");
-      res.json({ success: true });
+      res.clearCookie("inkplan.sid", {
+        path: "/",
+      });
+
+      res.status(200).json({ message: "Logged out successfully" });
     });
   });
 
-  // =========================
-  // PROFILE
-  // =========================
-
-  app.get("/api/profile", requireAuth, async (req: Request, res: Response) => {
-    const request = req as AuthenticatedRequest;
+  app.get("/api/auth/me", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
 
     try {
-      const profile = await ensureUserProfile(request.userId);
-      res.json(profile);
-    } catch (error) {
-      console.error("Get profile error:", error);
-      res.status(500).json({ error: "Failed to fetch profile" });
-    }
-  });
+      const userId = request.session?.userId;
 
-  app.patch(
-    "/api/profile",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const parsed = insertUserProfileSchema
-          .partial()
-          .safeParse(request.body);
-
-        if (!parsed.success) {
-          res.status(400).json({ error: "Invalid profile data" });
-          return;
-        }
-
-        const safeData = {
-          displayName: parsed.data.displayName,
-          skillLevel: parsed.data.skillLevel,
-          bio: parsed.data.bio,
-        };
-
-        await ensureUserProfile(request.userId);
-        const updated = await storage.updateUserProfile(
-          request.userId,
-          safeData,
-        );
-
-        res.json(updated);
-      } catch (error) {
-        console.error("Update profile error:", error);
-        res.status(500).json({ error: "Failed to update profile" });
-      }
-    },
-  );
-
-  // =========================
-  // STYLES
-  // =========================
-
-  app.get("/api/styles", async (_req: Request, res: Response) => {
-    try {
-      const styles = await storage.getAllStyles();
-      res.json(styles);
-    } catch (error) {
-      console.error("Get styles error:", error);
-      res.status(500).json({ error: "Failed to fetch styles" });
-    }
-  });
-
-  app.get("/api/styles/:id", async (req: Request, res: Response) => {
-    try {
-      const styleId = getRouteParam(req.params.id);
-      const style = await storage.getStyleById(styleId);
-
-      if (!style) {
-        res.status(404).json({ error: "Style not found" });
+      if (!userId) {
+        res.status(401).json({ error: "Not authenticated" });
         return;
       }
 
-      res.json(style);
+      const user = await storage.getUserById(userId);
+
+      if (!user) {
+        request.session.userId = undefined;
+
+        request.session.save((saveError) => {
+          if (saveError) {
+            console.error("Session cleanup error:", saveError);
+          }
+
+          res.status(401).json({ error: "Not authenticated" });
+        });
+        return;
+      }
+
+      await ensureUserProfile(user.id);
+
+      res.status(200).json({
+        user: toSafeUser(user),
+      });
     } catch (error) {
-      console.error("Get style error:", error);
-      res.status(500).json({ error: "Failed to fetch style" });
+      console.error("Get current user error:", error);
+      res.status(500).json({ error: "Failed to fetch current user" });
     }
   });
 
-  // =========================
-  // DRAWINGS
-  // =========================
-
-  app.get("/api/drawings", requireAuth, async (req: Request, res: Response) => {
-    const request = req as AuthenticatedRequest;
-
+  app.post("/api/ai/coach", async (req: Request, res: Response) => {
     try {
-      const drawings = await storage.getUserDrawings(request.userId);
-      res.json(drawings);
+      const message = String(req.body?.message ?? "").trim();
+
+      if (!message) {
+        res.status(400).json({ error: "Message is required" });
+        return;
+      }
+
+      const reply = await generateTattooCoachReply(message);
+
+      res.status(200).json({ reply });
     } catch (error) {
-      console.error("Get drawings error:", error);
-      res.status(500).json({ error: "Failed to fetch drawings" });
+      console.error("AI coach error:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error && error.message.includes("RESOURCE_EXHAUSTED")
+            ? "AI coach is a little busy right now. Try again in a moment."
+            : "Something went wrong with your AI coach. Please try again.",
+      });
     }
   });
-
-  app.get(
-    "/api/drawings/:id",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const drawingId = getRouteParam(req.params.id);
-        const drawing = await storage.getDrawingById(drawingId, request.userId);
-
-        if (!drawing) {
-          res.status(404).json({ error: "Drawing not found" });
-          return;
-        }
-
-        res.json(drawing);
-      } catch (error) {
-        console.error("Get drawing error:", error);
-        res.status(500).json({ error: "Failed to fetch drawing" });
-      }
-    },
-  );
-
-  app.post(
-    "/api/drawings",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const parsed = insertDrawingSchema.safeParse(request.body);
-
-        if (!parsed.success) {
-          res.status(400).json({ error: "Invalid drawing data" });
-          return;
-        }
-
-        const drawing = await storage.createDrawing(
-          request.userId,
-          parsed.data,
-        );
-        res.status(201).json(drawing);
-      } catch (error) {
-        console.error("Create drawing error:", error);
-        res.status(500).json({ error: "Failed to create drawing" });
-      }
-    },
-  );
-
-  app.patch(
-    "/api/drawings/:id",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const drawingId = getRouteParam(req.params.id);
-        const parsed = updateDrawingSchema.safeParse(request.body);
-
-        if (!parsed.success) {
-          res.status(400).json({ error: "Invalid drawing update" });
-          return;
-        }
-
-        const updated = await storage.updateDrawing(
-          drawingId,
-          request.userId,
-          parsed.data,
-        );
-
-        if (!updated) {
-          res.status(404).json({ error: "Drawing not found" });
-          return;
-        }
-
-        res.json(updated);
-      } catch (error) {
-        console.error("Update drawing error:", error);
-        res.status(500).json({ error: "Failed to update drawing" });
-      }
-    },
-  );
-
-  app.delete(
-    "/api/drawings/:id",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const drawingId = getRouteParam(req.params.id);
-        const existing = await storage.getDrawingById(
-          drawingId,
-          request.userId,
-        );
-
-        if (!existing) {
-          res.status(404).json({ error: "Drawing not found" });
-          return;
-        }
-
-        await storage.deleteDrawing(drawingId, request.userId);
-        res.status(204).send();
-      } catch (error) {
-        console.error("Delete drawing error:", error);
-        res.status(500).json({ error: "Failed to delete drawing" });
-      }
-    },
-  );
-
-  // =========================
-  // PROGRESS
-  // =========================
-
-  app.get("/api/progress", requireAuth, async (req: Request, res: Response) => {
-    const request = req as AuthenticatedRequest;
-
-    try {
-      const progress = await storage.getUserProgress(request.userId);
-      res.json(progress);
-    } catch (error) {
-      console.error("Get progress error:", error);
-      res.status(500).json({ error: "Failed to fetch progress" });
-    }
-  });
-
-  app.post(
-    "/api/progress",
-    requireAuth,
-    async (req: Request, res: Response) => {
-      const request = req as AuthenticatedRequest;
-
-      try {
-        const parsed = insertProgressSchema.safeParse(request.body);
-
-        if (!parsed.success) {
-          res.status(400).json({ error: "Invalid progress data" });
-          return;
-        }
-
-        const progress = await storage.upsertProgress(
-          request.userId,
-          parsed.data,
-        );
-
-        res.json(progress);
-      } catch (error) {
-        console.error("Upsert progress error:", error);
-        res.status(500).json({ error: "Failed to update progress" });
-      }
-    },
-  );
 }

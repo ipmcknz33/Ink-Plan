@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import type session from "express-session";
 import { storage } from "../../storage";
+import { generateTattooCoachReply } from "./services/ai";
 
 type SessionWithUser = session.Session & {
   userId?: string;
@@ -155,6 +156,43 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  app.post("/api/auth/guest", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
+    try {
+      const guestEmail = `guest_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 8)}@inkplan.local`;
+
+      const guestPassword = Math.random().toString(36).repeat(2);
+      const passwordHash = await bcrypt.hash(guestPassword, 10);
+
+      const user = await storage.createUser({
+        email: guestEmail,
+        passwordHash,
+      });
+
+      await ensureUserProfile(user.id);
+
+      request.session.userId = user.id;
+
+      request.session.save((saveError) => {
+        if (saveError) {
+          console.error("Guest session save error:", saveError);
+          res.status(500).json({ error: "Failed to create guest session" });
+          return;
+        }
+
+        res.status(201).json({
+          user: toSafeUser(user),
+        });
+      });
+    } catch (error) {
+      console.error("Guest auth error:", error);
+      res.status(500).json({ error: "Failed to continue as guest" });
+    }
+  });
+
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     const request = req as RequestWithSession;
 
@@ -213,6 +251,24 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error) {
       console.error("Get current user error:", error);
       res.status(500).json({ error: "Failed to fetch current user" });
+    }
+  });
+
+  app.post("/api/ai/coach", async (req: Request, res: Response) => {
+    try {
+      const message = String(req.body?.message ?? "").trim();
+
+      if (!message) {
+        res.status(400).json({ error: "Message is required" });
+        return;
+      }
+
+      const reply = await generateTattooCoachReply(message);
+
+      res.status(200).json({ reply });
+    } catch (error) {
+      console.error("AI coach error:", error);
+      res.status(500).json({ error: "Failed to generate AI coach reply" });
     }
   });
 }

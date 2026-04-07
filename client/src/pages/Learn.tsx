@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import AITattooCoachWindow from "@/components/ai/AITattooCoachWindow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   GraduationCap,
@@ -7,6 +8,7 @@ import {
   ArrowRight,
   Clock3,
   Brush,
+  Sparkles,
 } from "lucide-react";
 
 const learningSections = [
@@ -50,6 +52,27 @@ export default function Learn() {
             and build real tattoo knowledge over time.
           </p>
         </div>
+
+        <Card className="overflow-hidden border-border shadow-sm">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Meet your AI Tattoo Coach
+              </CardTitle>
+            </CardHeader>
+          </div>
+          <CardContent className="space-y-4 pt-6">
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              Ask questions about linework, shading, fake skin practice, machine
+              control, posture, stretch, and what to focus on next. This is the
+              first step toward turning InkPlan into a guided learning
+              experience instead of just a set of tools.
+            </p>
+
+            <AITattooCoachWindow />
+          </CardContent>
+        </Card>
 
         <Card className="border-border shadow-sm">
           <CardHeader>
