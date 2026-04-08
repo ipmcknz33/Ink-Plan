@@ -60,6 +60,7 @@ export default function Layout({ children }: LayoutProps) {
   const handleNavigate = (href: string) => {
     navigate(href);
     setIsMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleLogout = async () => {
@@ -79,30 +80,30 @@ export default function Layout({ children }: LayoutProps) {
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-card text-card-foreground">
-      <div className="border-b border-border px-5 py-5">
+      <div className="border-b border-border px-4 py-4 sm:px-5 sm:py-5">
         <button
           type="button"
           onClick={() => handleNavigate("/dashboard")}
-          className="flex items-center gap-3 text-left transition-opacity hover:opacity-90"
+          className="flex w-full items-center gap-3 text-left transition-opacity hover:opacity-90"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
             <span className="text-sm font-semibold tracking-[0.16em] text-red-400">
               IP
             </span>
           </div>
 
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold uppercase tracking-[0.18em] text-white">
               InkPlan
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 truncate text-xs text-muted-foreground">
               Apprenticeship prep platform
             </p>
           </div>
         </button>
       </div>
 
-      <nav className="flex-1 space-y-2 px-3 py-4">
+      <nav className="flex-1 space-y-2 overflow-y-auto px-3 py-4 ink-scroll-touch">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
@@ -119,7 +120,7 @@ export default function Layout({ children }: LayoutProps) {
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
+              <span className="truncate">{item.label}</span>
             </button>
           );
         })}
@@ -128,7 +129,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="space-y-3 border-t border-border p-4">
         <div className="rounded-2xl border border-white/6 bg-white/[0.03] px-4 py-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9 border border-white/10">
+            <Avatar className="h-9 w-9 shrink-0 border border-white/10">
               <AvatarFallback className="bg-zinc-900 text-sm text-white">
                 {avatarLetter}
               </AvatarFallback>
@@ -159,24 +160,24 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="border-b border-border bg-card lg:hidden">
+      <div className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             type="button"
             onClick={() => handleNavigate("/dashboard")}
-            className="flex items-center gap-3 text-left"
+            className="flex min-w-0 items-center gap-3 text-left"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
               <span className="text-xs font-semibold tracking-[0.16em] text-red-400">
                 IP
               </span>
             </div>
 
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold uppercase tracking-[0.18em] text-white">
                 InkPlan
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="truncate text-[11px] text-muted-foreground">
                 Apprenticeship prep
               </p>
             </div>
@@ -188,7 +189,7 @@ export default function Layout({ children }: LayoutProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/5"
+                className="shrink-0 text-white hover:bg-white/5"
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -196,7 +197,7 @@ export default function Layout({ children }: LayoutProps) {
 
             <SheetContent
               side="left"
-              className="w-72 border-r border-border bg-card p-0"
+              className="w-[86vw] max-w-72 border-r border-border bg-card p-0"
             >
               {sidebarContent}
             </SheetContent>
@@ -205,12 +206,12 @@ export default function Layout({ children }: LayoutProps) {
       </div>
 
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-border bg-card lg:block">
+        <aside className="hidden h-screen w-72 shrink-0 border-r border-border bg-card lg:sticky lg:top-0 lg:block">
           {sidebarContent}
         </aside>
 
-        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <main className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 xl:px-10">
+          <div className="ink-content-width">{children}</div>
         </main>
       </div>
     </div>

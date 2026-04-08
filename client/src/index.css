@@ -107,14 +107,37 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background font-sans antialiased text-foreground selection:bg-accent selection:text-white;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
   }
 
   h1,
@@ -124,6 +147,11 @@
   h5,
   h6 {
     @apply font-sans font-semibold tracking-tight;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   button {
@@ -142,5 +170,25 @@
 
   .ink-red-glow {
     box-shadow: 0 10px 30px rgba(220, 38, 38, 0.18);
+  }
+
+  .ink-page-shell {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .ink-content-width {
+    @apply mx-auto w-full max-w-6xl;
+  }
+
+  .ink-section-gap {
+    @apply space-y-6 sm:space-y-7 lg:space-y-8;
+  }
+
+  .ink-card-padding {
+    @apply p-4 sm:p-5 lg:p-6;
+  }
+
+  .ink-scroll-touch {
+    -webkit-overflow-scrolling: touch;
   }
 }
