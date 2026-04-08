@@ -97,46 +97,25 @@ export default function Practice() {
   };
 
   const coachOptions = useMemo<CoachOption[]>(() => {
-    const baseOptions: CoachOption[] = [
-      {
-        id: "what-is-this-page-for",
-        label: "What should I do here?",
-        answer:
-          "Use Practice to train one skill with intention.\n\nThis page is for repetition, cleaner execution, and stronger habits. Do not treat it like random drawing time. Pick a focus, compare your reps, and improve one thing at a time.",
-      },
-      {
-        id: "how-should-i-practice",
-        label: "How should I practice?",
-        answer:
-          "Keep the session simple.\n\nChoose one focus, work slowly, and aim for cleaner reps instead of more reps. Strong tattoo habits come from consistency, not rushing. Broad foundation first, specialization later.",
-      },
-      {
-        id: "how-does-this-help",
-        label: "How does this help apprenticeship prep?",
-        answer:
-          "This helps you become more teachable.\n\nBetter practice improves line control, design clarity, and discipline. InkPlan is here to prepare you for a real apprenticeship, not replace one.",
-      },
-    ];
-
     if (selectedFocus === "Linework") {
       return [
         {
-          id: "linework-start",
-          label: "What matters most in linework?",
+          id: "linework-1",
+          label: "What should I focus on first?",
           answer:
-            "The biggest goal is one clean, confident pass.\n\nAvoid hesitation, random depth changes, and tracing back over weak lines. Cleaner execution matters more than trying to look advanced.",
+            "Start with clean, confident passes. Focus on steadiness, consistent depth, and not retracing lines over and over.",
         },
         {
-          id: "linework-mistakes",
-          label: "What linework mistakes should I watch for?",
+          id: "linework-2",
+          label: "What am I trying to avoid here?",
           answer:
-            "Watch for wobble, hesitation, uneven depth, and repeated correction.\n\nIf your lines look weak or blown out compared to the examples, slow down and focus on control before speed.",
+            "Watch for shaky lines, wobble, hesitation, weak saturation, and depth mistakes like going too shallow or too deep.",
         },
         {
-          id: "linework-session",
-          label: "How should I structure this session?",
+          id: "linework-3",
+          label: "How do these examples help me?",
           answer:
-            "Work on one repeatable exercise.\n\nPractice straight lines, curves, corners, and clean starts and stops. Review what improved before moving on. Do not bounce between too many goals.",
+            "These references train your eye. You should be able to spot weak line confidence, faded shallow work, and blowout discoloration before you move into cleaner reps.",
         },
       ];
     }
@@ -144,44 +123,44 @@ export default function Practice() {
     if (selectedFocus === "Shading") {
       return [
         {
-          id: "shading-start",
+          id: "shading-1",
           label: "What matters most in shading?",
           answer:
-            "Focus on smooth value control and readable separation.\n\nDo not overwork the same area. Build values gradually and make sure the shading supports the design instead of muddying it.",
+            "Focus on smooth value control, clean transitions, and making sure shading supports the design instead of muddying it.",
         },
         {
-          id: "shading-mistakes",
-          label: "What shading mistakes should I avoid?",
+          id: "shading-2",
+          label: "What should I avoid?",
           answer:
-            "Avoid patchiness, muddy transitions, and making every area the same tone.\n\nIf the piece loses clarity, your shading is overpowering the structure instead of supporting it.",
+            "Avoid patchy fill, overworking the same area, and losing readability by making everything the same tone.",
         },
         {
-          id: "shading-session",
-          label: "How should I practice shading today?",
+          id: "shading-3",
+          label: "How should I practice shading?",
           answer:
-            "Keep the practice narrow.\n\nTrain value transitions, soft fades, and clear separation between lights, mids, and darks. Do not try to solve everything in one session.",
+            "Keep the session narrow. Work on soft fades, value separation, and consistency before trying to make a full piece look finished.",
         },
       ];
     }
 
     return [
       {
-        id: "composition-start",
+        id: "composition-1",
         label: "What matters most in composition?",
         answer:
-          "Clarity comes before detail.\n\nA strong composition reads quickly, has a clear focal area, and guides the eye naturally. If everything competes equally, the design gets weaker.",
+          "Clarity comes first. A design should read at a glance, have a clear focal area, and not feel crowded or confused.",
       },
       {
-        id: "composition-mistakes",
-        label: "What composition mistakes should I avoid?",
+        id: "composition-2",
+        label: "What should I avoid?",
         answer:
-          "Avoid crowding, weak hierarchy, and adding detail before the layout works.\n\nIf the design feels confusing at a glance, simplify before refining.",
+          "Avoid weak hierarchy, overcrowding, and adding detail before the layout works.",
       },
       {
-        id: "composition-session",
-        label: "How should I practice composition?",
+        id: "composition-3",
+        label: "How should I use this page?",
         answer:
-          "Start by checking the design at a distance.\n\nLook at silhouette, spacing, focal flow, and readability before adding extra detail. Good arrangement beats busy complexity.",
+          "Use this page to train your eye and your decisions. Study what weakens a tattoo, then practice with one clear goal instead of trying to fix everything at once.",
       },
     ];
   }, [selectedFocus]);
@@ -204,14 +183,14 @@ export default function Practice() {
           {
             title: "Bad line quality",
             description:
-              "These examples show weak line confidence, uneven depth, and poor consistency.",
+              "These examples show weak line confidence, hesitation, and uneven execution.",
             images: [
               {
-                src: "/images/bad-linework2.jpg",
+                src: "/images/bad-linework-ai-1.jpg",
                 alt: "Traditional bad linework example 1",
               },
               {
-                src: "/images/bad-linework1.jpg",
+                src: "/images/bad-linework-ai-2.jpg",
                 alt: "Traditional bad linework example 2",
               },
             ],
@@ -222,16 +201,16 @@ export default function Practice() {
               "These examples show lines that healed weak because they did not settle properly into the dermis.",
             images: [
               {
-                src: "/images/too-light.jpg",
-                alt: "Traditional too light tattoo example",
+                src: "/images/traditional-too-light-tattoo-example1.jpg",
+                alt: "traditional too light tattoo example 1",
               },
               {
-                src: "/images/Too shallow.jpg",
-                alt: "Traditional too shallow tattoo example 1",
+                src: "/images/traditional-too-shallow-tattoo-example-2.jpg",
+                alt: "taditional too shallow tattoo example 2",
               },
               {
-                src: "/images/Too shallow1.jpg",
-                alt: "Traditional too shallow tattoo example 2",
+                src: "/images/traditional-too-shallow-tattoo-example-3.jpg",
+                alt: "Traditional too shallow tattoo example 3",
               },
             ],
           },
@@ -241,15 +220,15 @@ export default function Practice() {
               "These examples show what can happen when the needle goes too deep and ink spreads under the skin.",
             images: [
               {
-                src: "/images/blowout.jpg",
+                src: "/images/Traditional-blowout-example-1.jpg",
                 alt: "Traditional blowout example 1",
               },
               {
-                src: "/images/blowout1.jpg",
+                src: "/images/Traditional-blowout-example-2.jpg",
                 alt: "Traditional blowout example 2",
               },
               {
-                src: "/images/blowout2.jpg",
+                src: "/images/traditional-blowout-example-3.jpg",
                 alt: "Traditional blowout example 3",
               },
             ],
