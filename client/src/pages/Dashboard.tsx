@@ -1,66 +1,57 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
+import AICoachPanel, { type CoachOption } from "@/components/AICoachPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
-  Flame,
-  Trophy,
-  Calendar,
+  ArrowRight,
+  BookOpen,
+  BrainCircuit,
+  Crown,
+  Library,
   Loader2,
   Lock,
+  PenTool,
+  ShieldCheck,
   Sparkles,
-  Crown,
-  BrainCircuit,
-  ArrowRight,
+  Target,
 } from "lucide-react";
-import {
-  useProfile,
-  useStyles,
-  useDrawings,
-  useProgress,
-} from "@/hooks/use-api";
+import { useProfile, useStyles } from "@/hooks/use-api";
 
-type CoachKey = "practice" | "fundamentals" | "styles" | "portfolio";
-
-const coachContent: Record<
-  CoachKey,
-  {
-    title: string;
-    message: string;
-    cta: string;
-    href: string;
-  }
-> = {
-  practice: {
-    title: "Practice with intention",
-    message:
-      "Pick one skill and keep it simple. Focus on clean line control or basic shape repetition before jumping into harder designs.",
-    cta: "Go to Practice",
-    href: "/practice",
-  },
-  fundamentals: {
-    title: "Build your foundation first",
-    message:
-      "Readability, spacing, line control, and value matter more than advanced-looking work. Get the basics cleaner before trying to look impressive.",
-    cta: "Go to Learn",
-    href: "/learn",
-  },
-  styles: {
-    title: "Study styles without locking in too early",
-    message:
-      "Explore multiple tattoo styles first. Broad understanding makes you more rounded, more coachable, and easier to teach in a real shop.",
-    cta: "Explore Styles",
-    href: "/styles",
-  },
-  portfolio: {
-    title: "Build a cleaner portfolio",
-    message:
-      "Show fundamentals first, then range, then your strongest work. Keep it organized and avoid presenting everything you make.",
-    cta: "Build Portfolio",
-    href: "/portfolio",
-  },
+type StyleItem = {
+  id: string;
+  name: string;
+  definition: string;
+  previewImage: string;
+  tags: string[];
 };
+
+const fallbackStyles: StyleItem[] = [
+  {
+    id: "traditional",
+    name: "American Traditional",
+    definition:
+      "Bold outlines, strong readability, and classic tattoo structure built to hold up clearly.",
+    previewImage: "/images/traditional-style.png",
+    tags: ["Bold", "Classic", "Readable"],
+  },
+  {
+    id: "black-grey",
+    name: "Black & Grey",
+    definition:
+      "Smooth shading, value control, and clear form separation built through light, mid, and dark balance.",
+    previewImage: "/images/black-grey-style.png",
+    tags: ["Smooth", "Value", "Contrast"],
+  },
+  {
+    id: "japanese",
+    name: "Japanese",
+    definition:
+      "Flowing composition, movement, hierarchy, and strong large-form design.",
+    previewImage: "/images/japanese-style.png",
+    tags: ["Flow", "Movement", "Large Forms"],
+  },
+];
 
 function getTierLabel(tier?: string | null) {
   if (tier === "premium") return "Premium";
@@ -80,14 +71,50 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: styles, isLoading: stylesLoading } = useStyles();
-  const { data: drawings, isLoading: drawingsLoading } = useDrawings();
-  const { data: progressData, isLoading: progressLoading } = useProgress();
 
-  const [activeCoachKey, setActiveCoachKey] =
-    useState<CoachKey>("fundamentals");
+  const isLoading = profileLoading || stylesLoading;
 
-  const isLoading =
-    profileLoading || stylesLoading || drawingsLoading || progressLoading;
+  const tier = profile?.subscriptionTier ?? "free";
+  const proUnlocked = canAccessPro(tier);
+  const premiumUnlocked = canAccessPremium(tier);
+
+  const displayStyles = useMemo<StyleItem[]>(() => {
+    const apiStyles = (styles as StyleItem[] | undefined) ?? [];
+    if (apiStyles.length > 0) {
+      return apiStyles.slice(0, 3);
+    }
+    return fallbackStyles;
+  }, [styles]);
+
+  const coachOptions = useMemo<CoachOption[]>(
+    () => [
+      {
+        id: "what-should-i-do-today",
+        label: "What should I do today?",
+        answer:
+          "Start with one clear objective.\n\nA strong Dashboard session usually means choosing one path: study fundamentals, review a style, or do focused practice. Do not try to do everything at once.",
+      },
+      {
+        id: "where-should-i-start",
+        label: "Where should I start first?",
+        answer:
+          "If you are unsure, start with Learn, then move into Practice.\n\nBuild understanding first, then apply it. Broad foundation first, specialization later.",
+      },
+      {
+        id: "how-does-ai-work",
+        label: "How does the AI Coach work?",
+        answer:
+          "Right now, the coach gives you structured guidance based on where you are in the app.\n\nThis is intentional. Strong fundamentals come from clear direction, not random answers.\n\nPremium unlocks deeper coaching, custom questions, and broader AI support across tattoo learning and the app.",
+      },
+      {
+        id: "what-is-inkplan-for",
+        label: "What is InkPlan really for?",
+        answer:
+          "InkPlan is here to help you become more apprenticeship-ready.\n\nIt does not replace a real apprenticeship. It helps you build stronger habits, better study structure, more useful practice, and a cleaner learning path before real shop mentorship.",
+      },
+    ],
+    [],
+  );
 
   if (isLoading) {
     return (
@@ -99,19 +126,6 @@ export default function Dashboard() {
     );
   }
 
-  const tier = profile?.subscriptionTier ?? "free";
-  const drawingsCount = drawings?.length || 0;
-  const totalHours =
-    progressData?.reduce((sum, p) => sum + (p.hoursPracticed || 0), 0) || 0;
-
-  const progressMap = new Map(
-    progressData?.map((p) => [p.styleId, p.progressPercent || 0]) || [],
-  );
-
-  const proUnlocked = canAccessPro(tier);
-  const premiumUnlocked = canAccessPremium(tier);
-  const activeCoach = coachContent[activeCoachKey];
-
   return (
     <Layout>
       <div className="space-y-8">
@@ -121,17 +135,17 @@ export default function Dashboard() {
               <div className="max-w-2xl">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-red-300">
                   <BrainCircuit className="h-3.5 w-3.5" />
-                  AI Tattoo Coach
+                  InkPlan Dashboard
                 </div>
 
-                <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-                  Focus on one thing today and do it clean.
-                </h2>
+                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                  Build skill with structure, not random reps.
+                </h1>
 
                 <p className="mt-3 max-w-xl text-sm leading-7 text-zinc-400 md:text-base">
-                  InkPlan helps you build fundamentals, improve practice habits,
-                  and prepare for a real apprenticeship. Start simple and stay
-                  consistent.
+                  Use Dashboard to pick the right next step, stay focused, and
+                  keep moving toward apprenticeship readiness without clutter or
+                  wasted effort.
                 </p>
               </div>
 
@@ -145,83 +159,80 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => setActiveCoachKey("practice")}
-                className={`rounded-2xl border px-4 py-2 text-sm transition ${
-                  activeCoachKey === "practice"
-                    ? "border-red-500/30 bg-red-500/10 text-white"
-                    : "border-white/8 bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05]"
-                }`}
-              >
-                Start Practice
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveCoachKey("fundamentals")}
-                className={`rounded-2xl border px-4 py-2 text-sm transition ${
-                  activeCoachKey === "fundamentals"
-                    ? "border-red-500/30 bg-red-500/10 text-white"
-                    : "border-white/8 bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05]"
-                }`}
-              >
-                Study Fundamentals
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveCoachKey("styles")}
-                className={`rounded-2xl border px-4 py-2 text-sm transition ${
-                  activeCoachKey === "styles"
-                    ? "border-red-500/30 bg-red-500/10 text-white"
-                    : "border-white/8 bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05]"
-                }`}
-              >
-                Explore Styles
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveCoachKey("portfolio")}
-                className={`rounded-2xl border px-4 py-2 text-sm transition ${
-                  activeCoachKey === "portfolio"
-                    ? "border-red-500/30 bg-red-500/10 text-white"
-                    : "border-white/8 bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05]"
-                }`}
-              >
-                Build Portfolio
-              </button>
-            </div>
-
-            <div className="mt-5 rounded-3xl border border-red-500/20 bg-red-500/8 p-5">
-              <h3 className="text-lg font-semibold text-white">
-                {activeCoach.title}
-              </h3>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-300">
-                {activeCoach.message}
-              </p>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLocation(activeCoach.href)}
-                  className="inline-flex items-center rounded-2xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
-                >
-                  {activeCoach.cta}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </button>
-
-                <p className="text-xs leading-6 text-zinc-500">
-                  InkPlan is preparation for apprenticeship, not a replacement
-                  for real mentorship in a real shop.
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
+
+        <AICoachPanel
+          title="AI Tattoo Coach"
+          subtitle="Get structured guidance for what to do next. Premium expands this into broader AI support and custom questions."
+          options={coachOptions}
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card
+            className="cursor-pointer border-white/8 bg-card shadow-none transition hover:border-red-500/30"
+            onClick={() => setLocation("/learn")}
+          >
+            <CardContent className="p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                <BookOpen className="h-5 w-5 text-red-400" />
+              </div>
+              <p className="font-semibold text-white">Learn Fundamentals</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Study readability, flow, and foundational tattoo decisions
+                before trying to force advanced execution.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer border-white/8 bg-card shadow-none transition hover:border-red-500/30"
+            onClick={() => setLocation("/styles")}
+          >
+            <CardContent className="p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                <Target className="h-5 w-5 text-red-400" />
+              </div>
+              <p className="font-semibold text-white">Study Styles</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Build broad understanding across styles before narrowing your
+                direction too early.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer border-white/8 bg-card shadow-none transition hover:border-red-500/30"
+            onClick={() => setLocation("/practice")}
+          >
+            <CardContent className="p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                <PenTool className="h-5 w-5 text-red-400" />
+              </div>
+              <p className="font-semibold text-white">Practice With Intent</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Train one skill at a time. Cleaner repetition beats random
+                volume.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer border-white/8 bg-card shadow-none transition hover:border-red-500/30"
+            onClick={() => setLocation("/library")}
+          >
+            <CardContent className="p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
+                <Library className="h-5 w-5 text-red-400" />
+              </div>
+              <p className="font-semibold text-white">Use the Library</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Review references, examples, and supporting material that make
+                your learning path more useful.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="border-white/8 bg-gradient-to-r from-red-600 to-red-500 text-white shadow-none">
           <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
@@ -230,12 +241,12 @@ export default function Dashboard() {
                 Upgrade Path
               </p>
               <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-                Unlock deeper guidance, better structure, and future premium
-                drops
+                Expand the coach, structure, and premium learning depth
               </h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-                Free gets users started. Pro sharpens the workflow. Premium
-                opens deeper support and stronger learning tools.
+                Free gives users a strong local-first coach and core learning
+                flow. Premium is where broader AI support, deeper guidance, and
+                stronger learning tools belong.
               </p>
             </div>
 
@@ -249,66 +260,70 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card className="border-white/8 bg-card shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-                Drawings
-              </CardTitle>
-              <Trophy className="h-4 w-4 text-red-400" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className="text-2xl font-semibold text-white"
-                data-testid="text-drawings-count"
-              >
-                {drawingsCount}
-              </div>
-              <p className="text-xs text-zinc-500">Total sheets completed</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          <h2 className="border-b border-white/8 pb-2 text-xl font-semibold text-white">
+            Recommended styles to study
+          </h2>
 
-          <Card className="border-white/8 bg-card shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-                Hours
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-zinc-500" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className="text-2xl font-semibold text-white"
-                data-testid="text-hours-practiced"
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {displayStyles.map((style) => (
+              <Card
+                key={style.id}
+                className="group cursor-pointer overflow-hidden border-white/8 bg-card shadow-none transition hover:border-red-500/30"
+                onClick={() => setLocation(`/styles/${style.id}`)}
+                data-testid={`card-style-${style.id}`}
               >
-                {totalHours}h
-              </div>
-              <p className="text-xs text-zinc-500">Practice time logged</p>
-            </CardContent>
-          </Card>
+                <div className="relative aspect-[4/3] overflow-hidden bg-zinc-900">
+                  <img
+                    src={style.previewImage}
+                    alt={style.name}
+                    className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                </div>
 
-          <Card className="border-white/8 bg-white/[0.03] shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm uppercase tracking-[0.18em] text-zinc-500">
-                Streak
-              </CardTitle>
-              <Flame className="h-4 w-4 text-red-400" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className="text-2xl font-semibold text-white"
-                data-testid="text-streak"
-              >
-                0 Days
-              </div>
-              <p className="text-xs text-zinc-500">Keep the habit moving</p>
-            </CardContent>
-          </Card>
+                <CardContent className="space-y-4 p-5">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white transition group-hover:text-red-400">
+                      {style.name}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-400">
+                      {style.definition}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {style.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setLocation(`/styles/${style.id}`);
+                    }}
+                    className="inline-flex items-center text-sm font-semibold text-white transition hover:text-red-400"
+                  >
+                    Open study page
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="border-b border-white/8 pb-2 text-xl font-semibold text-white">
-            Locked Growth Path
-          </h3>
+          <h2 className="border-b border-white/8 pb-2 text-xl font-semibold text-white">
+            Locked growth path
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card
@@ -322,15 +337,15 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-lg text-white">
                     <Sparkles className="h-5 w-5 text-red-400" />
-                    Pro Insights
+                    Pro Guidance
                   </CardTitle>
                   {!proUnlocked && <Lock className="h-4 w-4 text-zinc-500" />}
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm leading-6 text-zinc-400">
-                  Advanced training breakdowns, higher-level progress analysis,
-                  and deeper practice guidance.
+                  Deeper workflow structure, stronger guidance layers, and more
+                  useful support for focused development.
                 </p>
                 <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">
                   {proUnlocked
@@ -351,7 +366,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-lg text-white">
                     <Crown className="h-5 w-5 text-red-400" />
-                    Premium Library
+                    Premium AI Coach
                   </CardTitle>
                   {!premiumUnlocked && (
                     <Lock className="h-4 w-4 text-zinc-500" />
@@ -360,8 +375,8 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm leading-6 text-zinc-400">
-                  Exclusive premium references, advanced resources, and access
-                  to new premium drops first.
+                  Broader AI support for tattoo learning and app guidance,
+                  custom questions, and deeper premium coaching.
                 </p>
                 <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">
                   {premiumUnlocked
@@ -373,88 +388,38 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <h3 className="border-b border-white/8 pb-2 text-xl font-semibold text-white">
-            Style Mastery
-          </h3>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {styles?.map((style) => (
-              <Card
-                key={style.id}
-                className="group cursor-pointer overflow-hidden border-white/8 bg-card shadow-none transition hover:border-red-500/30"
-                onClick={() => setLocation(`/styles/${style.id}`)}
-                data-testid={`card-style-${style.id}`}
-              >
-                <div className="flex">
-                  <div className="relative h-auto w-24 bg-zinc-900">
-                    <img
-                      src={style.previewImage}
-                      alt={style.name}
-                      className="absolute inset-0 h-full w-full object-cover grayscale transition duration-500 group-hover:grayscale-0"
-                    />
-                  </div>
-
-                  <div className="flex-1 p-6">
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div>
-                        <h4 className="text-lg font-semibold text-white transition group-hover:text-red-400">
-                          {style.name}
-                        </h4>
-                        <p className="line-clamp-1 text-xs text-zinc-500">
-                          {style.definition}
-                        </p>
-                      </div>
-
-                      <span
-                        className="text-sm font-semibold text-white"
-                        data-testid={`text-progress-${style.id}`}
-                      >
-                        {progressMap.get(style.id) || 0}%
-                      </span>
-                    </div>
-
-                    <Progress
-                      value={progressMap.get(style.id) || 0}
-                      className="mt-4 h-2 bg-zinc-900"
-                    />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
         <div className="grid gap-8 md:grid-cols-2">
           <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-6">
             <h3 className="mb-4 text-lg font-semibold text-white">
-              Daily Drill
+              Today&apos;s recommended focus
             </h3>
-            <p className="mb-6 text-zinc-400">
-              Today&apos;s focus is on{" "}
-              <span className="font-medium text-white">Line Consistency</span>{" "}
-              in American Traditional.
+            <p className="mb-6 text-sm leading-7 text-zinc-400">
+              Start with one clean objective:
+              <span className="ml-1 font-medium text-white">
+                line control, shape clarity, or design readability.
+              </span>
+              Pick one and work it on purpose.
             </p>
             <button
               className="w-full rounded-2xl bg-red-600 py-3 text-sm font-semibold text-white transition hover:bg-red-500"
-              onClick={() => setLocation("/styles/american_traditional")}
-              data-testid="button-start-drill"
+              onClick={() => setLocation("/practice")}
+              data-testid="button-start-practice"
             >
-              Start 5-min Warmup
+              Start Practice
             </button>
           </div>
 
           <div className="rounded-3xl border border-white/8 bg-card p-6">
             <h3 className="mb-4 text-lg font-semibold text-white">
-              Plan Recommendation
+              Plan recommendation
             </h3>
             <p className="mb-6 text-sm leading-7 text-zinc-400">
               {tier === "free" &&
-                "You are on Free. Upgrade when you want deeper guidance, stronger structure, and premium content."}
+                "You are on Free. Use the local coach, core style study, and guided practice flow first. Upgrade when you want broader AI support and deeper structure."}
               {tier === "pro" &&
-                "You are on Pro. Move to Premium when you want the full library and deeper support."}
+                "You are on Pro. You already have stronger structure. Move to Premium when you want broader AI coaching and deeper support."}
               {tier === "premium" &&
-                "You are on Premium. You have access to the highest tier of InkPlan support."}
+                "You are on Premium. You are positioned for the deepest InkPlan guidance layer as broader AI support rolls in."}
             </p>
 
             <button
@@ -466,6 +431,25 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        <Card className="border-white/8 bg-card shadow-none">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 h-5 w-5 text-red-400" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  Apprenticeship-first mindset
+                </h3>
+                <p className="mt-2 max-w-3xl text-sm leading-7 text-zinc-400">
+                  InkPlan is here to help you become more prepared, more
+                  teachable, and more disciplined before entering a real shop
+                  learning environment. It is not a replacement for real
+                  apprenticeship or real mentorship.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );

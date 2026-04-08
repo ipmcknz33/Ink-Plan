@@ -51,7 +51,7 @@ const fallbackStyles: StyleItem[] = [
     name: "American Traditional",
     definition:
       "Bold outlines, strong readability, and classic tattoo structure built to hold up clearly.",
-    previewImage: "/images/traditional-style.jpg",
+    previewImage: "/images/traditional-style.png",
     tags: ["Bold", "Classic", "Readable"],
     rules: [
       "Use strong line weight hierarchy.",
@@ -83,7 +83,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Black & Grey",
     definition:
       "Smooth shading, value control, and clean form separation built through light, mid, and dark balance.",
-    previewImage: "/images/black-grey-style.jpg",
+    previewImage: "/images/black-grey-style.png",
     tags: ["Smooth", "Value", "Contrast"],
     rules: [
       "Separate lights, mids, and darks clearly.",
@@ -115,7 +115,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Japanese",
     definition:
       "Flowing composition, movement, hierarchy, and strong large-form design.",
-    previewImage: "/images/japanese-style.jpg",
+    previewImage: "/images/japanese-style.png",
     tags: ["Flow", "Movement", "Large Forms"],
     rules: [
       "Let major forms guide the eye first.",
@@ -147,7 +147,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Lettering",
     definition:
       "Clean typography, spacing, rhythm, and readable tattoo design.",
-    previewImage: "/images/lettering-style.jpg",
+    previewImage: "/images/lettering-style.png",
     tags: ["Typography", "Spacing", "Readable"],
     rules: [
       "Readability comes before decoration.",
@@ -179,7 +179,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Neo Traditional",
     definition:
       "A richer, more illustrative evolution of Traditional with stronger color, stylized forms, and extra detail.",
-    previewImage: "/images/neo-traditional-style.jpg",
+    previewImage: "/images/neo-traditional-style.png",
     tags: ["Stylized", "Color", "Illustrative"],
     rules: [
       "Keep the silhouette strong before rendering details.",
@@ -211,7 +211,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Fine Line",
     definition:
       "Delicate, minimal tattooing built on restraint, spacing, subtle linework, and clean simplicity.",
-    previewImage: "/images/fine-line-style.jpg",
+    previewImage: "/images/fine-line-style.png",
     tags: ["Delicate", "Minimal", "Clean"],
     rules: [
       "Use restraint and avoid unnecessary complexity.",
@@ -239,6 +239,74 @@ const fallbackStyles: StyleItem[] = [
     ]),
   },
 ];
+
+/**
+ * FLASH SHEET IMAGE + POSITIONING
+ *
+ * This is the only section you need to edit to reposition images.
+ *
+ * Keep baseX/baseY the same for consistency.
+ * Change ONLY offsetX / offsetY for the style you want to nudge.
+ *
+ * Examples:
+ * - move down 100px -> offsetY: 100
+ * - move up 40px    -> offsetY: -40
+ * - move right 20px -> offsetX: 20
+ * - move left 20px  -> offsetX: -20
+ */
+const flashSheetConfigByStyleId: Record<
+  string,
+  {
+    src: string;
+    baseX: number;
+    baseY: number;
+    offsetX: number;
+    offsetY: number;
+  }
+> = {
+  traditional: {
+    src: "/images/traditional-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+  "black-grey": {
+    src: "/images/black-grey-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+  japanese: {
+    src: "/images/japanese-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+  lettering: {
+    src: "/images/lettering-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+  "neo-traditional": {
+    src: "/images/neo-traditional-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+  "fine-line": {
+    src: "/images/fine-line-flash-sheet.jpg",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  },
+};
 
 function getFocusFromDrillTitle(title: string) {
   const normalized = title.toLowerCase();
@@ -298,18 +366,18 @@ function getPromptBundle(styleName: string): PromptBundle {
 
   if (normalized.includes("japanese")) {
     return {
-      main: "japanese tattoo flash sheet, koi fish, dragon, hannya mask, peonies, waves, wind bars, bold outlines, strong movement, traditional japanese tattoo study sheet, clean white background",
+      main: "japanese tattoo flash sheet, dragon, daruma dolls, samurai, oni mask, hannya mask, bold outlines, traditional japanese tattoo study sheet, clean white background",
       variations: [
-        "koi fish and peony japanese flash sheet",
-        "dragon with wind bars and cloud sheet",
-        "hannya mask and flowers japanese study sheet",
+        "dragon and floral japanese flash sheet",
+        "samurai and mask japanese study sheet",
+        "daruma dolls and hannya mask japanese sheet",
       ],
     };
   }
 
   if (normalized.includes("letter")) {
     return {
-      main: "tattoo lettering flash sheet, script words, blackletter examples, ornamental flourishes, clean spacing, black ink, high contrast, tattoo study reference sheet, white background",
+      main: "tattoo lettering flash sheet, family, ambition, forever, strength, tradition, honour, elegant script and blackletter mix, clean spacing, black ink, tattoo study reference sheet, white background",
       variations: [
         "script lettering study sheet",
         "blackletter tattoo flash sheet",
@@ -320,18 +388,18 @@ function getPromptBundle(styleName: string): PromptBundle {
 
   if (normalized.includes("neo")) {
     return {
-      main: "neo traditional tattoo flash sheet, bold outlines, richer colors, stylized animals, flowers, lady heads, decorative framing, smooth shading, clean white background, tattoo study reference sheet",
+      main: "neo traditional tattoo flash sheet, fox, owl, ornate lady head, heart and dagger, potion bottle, rich color palette, bold outlines, decorative flowers, clean white background, tattoo study reference sheet",
       variations: [
-        "neo traditional fox and peonies flash sheet",
+        "neo traditional fox and owl flash sheet",
         "lady head and floral neo traditional sheet",
-        "stylized owl neo traditional study sheet",
+        "heart dagger and potion neo traditional study sheet",
       ],
     };
   }
 
   if (normalized.includes("fine")) {
     return {
-      main: "fine line tattoo flash sheet, delicate floral stems, butterflies, ornamental micro designs, subtle linework, minimal black ink, clean white background, tattoo study reference sheet",
+      main: "fine line tattoo flash sheet, delicate florals, butterflies, ornamental details, subtle linework, minimal black ink, clean white background, tattoo study reference sheet",
       variations: [
         "fine line floral micro tattoo sheet",
         "delicate butterfly and botanical study sheet",
@@ -369,6 +437,16 @@ export default function StyleDetail() {
   }, [styleId]);
 
   const style = (apiStyle as StyleItem | undefined) ?? fallbackStyle ?? null;
+
+  const flashSheetConfig = flashSheetConfigByStyleId[styleId] || {
+    src: "",
+    baseX: 50,
+    baseY: 35,
+    offsetX: 0,
+    offsetY: 0,
+  };
+
+  const flashSheetSrc = flashSheetConfig.src;
 
   const drills: Drill[] = useMemo(() => {
     if (!style?.drills) {
@@ -439,6 +517,11 @@ export default function StyleDetail() {
               src={style.previewImage}
               alt={style.name}
               className="h-full w-full object-cover"
+              style={
+                styleId === "lettering"
+                  ? { transform: "translateY(100px)" }
+                  : undefined
+              }
             />
           </div>
 
@@ -488,6 +571,37 @@ export default function StyleDetail() {
             </p>
           </CardContent>
         </Card>
+
+        {flashSheetSrc ? (
+          <Card className="rounded-3xl border border-white/8 bg-card shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl text-white">
+                <ImageIcon className="h-5 w-5 text-red-400" />
+                AI Flash Sheet Preview
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <p className="max-w-2xl text-sm leading-7 text-zinc-400">
+                Use this generated flash sheet as a study reference for{" "}
+                {style.name}. Study structure, readability, spacing, and shape
+                language before moving into drills.
+              </p>
+
+              <div className="relative h-[420px] overflow-hidden rounded-3xl border border-white/8 bg-white/[0.02]">
+                <img
+                  src={flashSheetSrc}
+                  alt={`${style.name} AI flash sheet`}
+                  className="absolute left-0 top-0 h-full w-full object-cover"
+                  style={{
+                    objectPosition: `${flashSheetConfig.baseX}% ${flashSheetConfig.baseY}%`,
+                    transform: `translate(${flashSheetConfig.offsetX}px, ${flashSheetConfig.offsetY}px)`,
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <section className="grid gap-4 lg:grid-cols-3">
           <Card className="rounded-3xl border-white/8 bg-card shadow-none">

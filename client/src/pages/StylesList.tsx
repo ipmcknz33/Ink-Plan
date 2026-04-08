@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import {
   ArrowRight,
   BookOpen,
+  ImageIcon,
   Loader2,
   ShieldCheck,
   Sparkles,
@@ -27,7 +28,7 @@ const fallbackStyles: StyleItem[] = [
     name: "American Traditional",
     definition:
       "Bold outlines, strong readability, and classic tattoo structure built to hold up clearly.",
-    previewImage: "/images/traditional-style.jpg",
+    previewImage: "/images/traditional-style.png",
     tags: ["Bold", "Classic", "Readable"],
   },
   {
@@ -35,7 +36,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Black & Grey",
     definition:
       "Smooth shading, value control, and clean form separation built through light, mid, and dark balance.",
-    previewImage: "/images/black-grey-style.jpg",
+    previewImage: "/images/black-grey-style.png",
     tags: ["Smooth", "Value", "Contrast"],
   },
   {
@@ -43,7 +44,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Japanese",
     definition:
       "Flowing composition, movement, hierarchy, and strong large-form design.",
-    previewImage: "/images/japanese-style.jpg",
+    previewImage: "/images/japanese-style.png",
     tags: ["Flow", "Movement", "Large Forms"],
   },
   {
@@ -51,7 +52,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Lettering",
     definition:
       "Clean typography, spacing, rhythm, and readable tattoo design.",
-    previewImage: "/images/lettering-style.jpg",
+    previewImage: "/images/lettering-style.png",
     tags: ["Typography", "Spacing", "Readable"],
   },
   {
@@ -59,7 +60,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Neo Traditional",
     definition:
       "A richer, more illustrative evolution of Traditional with stronger color, stylized forms, and extra detail.",
-    previewImage: "/images/neo-traditional-style.jpg",
+    previewImage: "/images/neo-traditional-style.png",
     tags: ["Stylized", "Color", "Illustrative"],
   },
   {
@@ -67,10 +68,19 @@ const fallbackStyles: StyleItem[] = [
     name: "Fine Line",
     definition:
       "Delicate, minimal tattooing built on restraint, spacing, subtle linework, and clean simplicity.",
-    previewImage: "/images/fine-line-style.jpg",
+    previewImage: "/images/fine-line-style.png",
     tags: ["Delicate", "Minimal", "Clean"],
   },
 ];
+
+const flashSheetByStyleId: Record<string, string> = {
+  traditional: "/images/traditional-flash-sheet.jpg",
+  "black-grey": "/images/black-grey-flash-sheet.jpg",
+  japanese: "/images/japanese-flash-sheet.jpg",
+  lettering: "/images/lettering-flash-sheet.jpg",
+  "neo-traditional": "/images/neo-traditional-flash-sheet.jpg",
+  "fine-line": "/images/fine-line-flash-sheet.jpg",
+};
 
 export default function StylesList() {
   const stylesQuery = useStyles();
@@ -174,79 +184,100 @@ export default function StylesList() {
         </section>
 
         <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {displayStyles.map((style) => (
-            <Link key={style.id} href={`/styles/${style.id}`}>
-              <Card
-                className="group h-full cursor-pointer overflow-hidden rounded-3xl border border-white/8 bg-card shadow-none transition-all duration-300 hover:border-red-500/30"
-                data-testid={`card-style-${style.id}`}
-              >
-                <div className="relative aspect-[4/3] overflow-hidden bg-zinc-900">
-                  <img
-                    src={style.previewImage}
-                    alt={style.name}
-                    className="h-full w-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          {displayStyles.map((style) => {
+            const flashSheetSrc = flashSheetByStyleId[style.id];
 
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {style.tags.slice(0, 3).map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="border-0 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
+            return (
+              <Link key={style.id} href={`/styles/${style.id}`}>
+                <Card
+                  className="group h-full cursor-pointer overflow-hidden rounded-3xl border border-white/8 bg-card shadow-none transition-all duration-300 hover:border-red-500/30"
+                  data-testid={`card-style-${style.id}`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-zinc-900">
+                    <img
+                      src={style.previewImage}
+                      alt={style.name}
+                      className="h-full w-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {style.tags.slice(0, 3).map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="border-0 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <h3 className="text-2xl font-semibold text-white">
+                        {style.name}
+                      </h3>
                     </div>
-
-                    <h3 className="text-2xl font-semibold text-white">
-                      {style.name}
-                    </h3>
                   </div>
-                </div>
 
-                <CardContent className="space-y-4 p-5">
-                  <p className="line-clamp-3 text-sm leading-6 text-zinc-400">
-                    {style.definition}
-                  </p>
+                  <CardContent className="space-y-4 p-5">
+                    <p className="line-clamp-3 text-sm leading-6 text-zinc-400">
+                      {style.definition}
+                    </p>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-white/10 text-zinc-300"
-                    >
-                      Study Guide
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-white/10 text-zinc-300"
-                    >
-                      Rules
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-white/10 text-zinc-300"
-                    >
-                      AI Flash Prompt
-                    </Badge>
-                  </div>
-                </CardContent>
+                    {flashSheetSrc ? (
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                          <ImageIcon className="h-3.5 w-3.5 text-red-400" />
+                          AI Flash Sheet Preview
+                        </div>
 
-                <CardFooter className="flex items-center justify-between p-5 pt-0">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Open study page
-                  </span>
+                        <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-950">
+                          <img
+                            src={flashSheetSrc}
+                            alt={`${style.name} flash sheet`}
+                            className="h-48 w-full object-cover object-top"
+                          />
+                        </div>
+                      </div>
+                    ) : null}
 
-                  <span className="flex items-center gap-1 text-sm font-semibold text-white transition-transform group-hover:translate-x-1">
-                    View
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
+                    <div className="flex flex-wrap gap-2">
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-white/10 text-zinc-300"
+                      >
+                        Study Guide
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-white/10 text-zinc-300"
+                      >
+                        Rules
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-white/10 text-zinc-300"
+                      >
+                        AI Flash Sheet
+                      </Badge>
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="flex items-center justify-between p-5 pt-0">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                      Open study page
+                    </span>
+
+                    <span className="flex items-center gap-1 text-sm font-semibold text-white transition-transform group-hover:translate-x-1">
+                      View
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </CardFooter>
+                </Card>
+              </Link>
+            );
+          })}
         </section>
       </div>
     </Layout>
