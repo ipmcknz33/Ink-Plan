@@ -49,6 +49,66 @@ type ExampleContent = {
   examples: ExampleSection[];
 };
 
+const sharedShadingExamples: ExampleSection[] = [
+  {
+    title: "Blotchy / patchy shading",
+    description:
+      "These examples show inconsistent saturation and uneven fill caused by poor control and rushed passes.",
+    images: [
+      {
+        src: "/images/shading-blotchy-1.jpg",
+        alt: "Blotchy shading example 1",
+      },
+      {
+        src: "/images/shading-blotchy-2.jpg",
+        alt: "Blotchy shading example 2",
+      },
+      {
+        src: "/images/shading-blotchy-3.jpg",
+        alt: "Blotchy shading example 3",
+      },
+    ],
+  },
+  {
+    title: "Flat / one tone shading",
+    description:
+      "These examples show weak value separation where everything sits at the same tone and loses depth.",
+    images: [
+      {
+        src: "/images/shading-flat-1.jpg",
+        alt: "Flat shading example 1",
+      },
+      {
+        src: "/images/shading-flat-2.jpg",
+        alt: "Flat shading example 2",
+      },
+      {
+        src: "/images/shading-flat-3.jpg",
+        alt: "Flat shading example 3",
+      },
+    ],
+  },
+  {
+    title: "Uneven / dirty gradients",
+    description:
+      "These examples show rough transitions, streaky fades, and gradients that do not flow cleanly.",
+    images: [
+      {
+        src: "/images/shading-gradient-1.jpg",
+        alt: "Uneven gradient example 1",
+      },
+      {
+        src: "/images/shading-gradient-2.jpg",
+        alt: "Uneven gradient example 2",
+      },
+      {
+        src: "/images/shading-gradient-3.jpg",
+        alt: "Uneven gradient example 3",
+      },
+    ],
+  },
+];
+
 export default function Practice() {
   const [location] = useLocation();
 
@@ -132,13 +192,13 @@ export default function Practice() {
           id: "shading-2",
           label: "What should I avoid?",
           answer:
-            "Avoid patchy fill, overworking the same area, and losing readability by making everything the same tone.",
+            "Avoid patchy fill, flat one-tone shading, and dirty gradients that make the design feel muddy or unfinished.",
         },
         {
           id: "shading-3",
           label: "How should I practice shading?",
           answer:
-            "Keep the session narrow. Work on soft fades, value separation, and consistency before trying to make a full piece look finished.",
+            "Keep the session narrow. Work on one fade type at a time, compare your values clearly, and do not try to finish everything in one pass.",
         },
       ];
     }
@@ -202,11 +262,11 @@ export default function Practice() {
             images: [
               {
                 src: "/images/traditional-too-light-tattoo-example1.jpg",
-                alt: "traditional too light tattoo example 1",
+                alt: "Traditional too light tattoo example 1",
               },
               {
                 src: "/images/traditional-too-shallow-tattoo-example-2.jpg",
-                alt: "taditional too shallow tattoo example 2",
+                alt: "Traditional too shallow tattoo example 2",
               },
               {
                 src: "/images/traditional-too-shallow-tattoo-example-3.jpg",
@@ -250,23 +310,7 @@ export default function Practice() {
           "Letting shading bury the main outline.",
           "Making every area the same value.",
         ],
-        examples: [
-          {
-            title: "Traditional shading reference",
-            description:
-              "Add your own Traditional shading reference examples here.",
-            images: [
-              {
-                src: "/images/traditional-shading-1.jpg",
-                alt: "Traditional shading example 1",
-              },
-              {
-                src: "/images/traditional-shading-2.jpg",
-                alt: "Traditional shading example 2",
-              },
-            ],
-          },
-        ],
+        examples: sharedShadingExamples,
       };
     }
 
@@ -315,22 +359,7 @@ export default function Practice() {
           "Ignoring the light source.",
           "Flattening the whole design into one tone.",
         ],
-        examples: [
-          {
-            title: "Black & Grey shading reference",
-            description: "Add your own Black & Grey shading examples here.",
-            images: [
-              {
-                src: "/images/black-grey-shading-1.jpg",
-                alt: "Black and grey shading example 1",
-              },
-              {
-                src: "/images/black-grey-shading-2.jpg",
-                alt: "Black and grey shading example 2",
-              },
-            ],
-          },
-        ],
+        examples: sharedShadingExamples,
       };
     }
 
@@ -379,22 +408,7 @@ export default function Practice() {
           "Making every shaded area equally dark.",
           "Ignoring the direction of flow in the piece.",
         ],
-        examples: [
-          {
-            title: "Japanese shading reference",
-            description: "Add your own Japanese shading examples here.",
-            images: [
-              {
-                src: "/images/japanese-shading-1.jpg",
-                alt: "Japanese shading example 1",
-              },
-              {
-                src: "/images/japanese-shading-2.jpg",
-                alt: "Japanese shading example 2",
-              },
-            ],
-          },
-        ],
+        examples: sharedShadingExamples,
       };
     }
 
@@ -443,22 +457,7 @@ export default function Practice() {
           "Uneven dark spots that pull the eye randomly.",
           "Softening edges that should stay clear.",
         ],
-        examples: [
-          {
-            title: "Lettering shading reference",
-            description: "Add your own Lettering shading examples here.",
-            images: [
-              {
-                src: "/images/lettering-shading-1.jpg",
-                alt: "Lettering shading example 1",
-              },
-              {
-                src: "/images/lettering-shading-2.jpg",
-                alt: "Lettering shading example 2",
-              },
-            ],
-          },
-        ],
+        examples: sharedShadingExamples,
       };
     }
 
@@ -495,14 +494,14 @@ export default function Practice() {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <section className="rounded-3xl border bg-card p-6 shadow-sm">
+      <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+        <section className="ink-section ink-section-padding">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-primary">
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary sm:text-sm">
                 Practice
               </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
                 Apply what you studied
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -511,11 +510,11 @@ export default function Practice() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto">
               <select
                 value={selectedStyle}
                 onChange={(e) => setSelectedStyle(e.target.value)}
-                className="rounded-lg border bg-background px-3 py-2"
+                className="min-w-0 rounded-xl border bg-background px-3 py-2.5 text-sm"
               >
                 {defaultStyles.map((style) => (
                   <option key={style} value={style}>
@@ -527,7 +526,7 @@ export default function Practice() {
               <select
                 value={selectedFocus}
                 onChange={(e) => setSelectedFocus(e.target.value)}
-                className="rounded-lg border bg-background px-3 py-2"
+                className="min-w-0 rounded-xl border bg-background px-3 py-2.5 text-sm"
               >
                 {defaultFocuses.map((focus) => (
                   <option key={focus} value={focus}>
@@ -546,18 +545,18 @@ export default function Practice() {
         />
 
         <Card className="rounded-3xl border shadow-sm">
-          <CardContent className="space-y-6 p-6 text-center">
+          <CardContent className="space-y-5 p-4 text-center sm:space-y-6 sm:p-5 lg:p-6">
             <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground sm:text-sm">
                 Optional focus timer
               </p>
-              <div className="mt-4 font-mono text-5xl font-bold text-primary sm:text-6xl">
+              <div className="mt-4 font-mono text-4xl font-bold text-primary sm:text-5xl lg:text-6xl">
                 {formatTime(timeLeft)}
               </div>
             </div>
 
-            <div className="flex justify-center gap-3">
-              <Button onClick={toggleTimer}>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <Button onClick={toggleTimer} className="w-full sm:w-auto">
                 {isActive ? (
                   <Pause className="mr-2 h-4 w-4" />
                 ) : (
@@ -566,7 +565,11 @@ export default function Practice() {
                 {isActive ? "Pause" : "Start"}
               </Button>
 
-              <Button variant="outline" onClick={resetTimer}>
+              <Button
+                variant="outline"
+                onClick={resetTimer}
+                className="w-full sm:w-auto"
+              >
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Reset
               </Button>
@@ -579,12 +582,14 @@ export default function Practice() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
           <Card className="rounded-3xl border shadow-sm">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="mb-4 flex items-center gap-2 font-semibold">
-                <Target className="h-4 w-4 text-primary" />
-                {practiceContent.focusTitle}
+                <Target className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 truncate">
+                  {practiceContent.focusTitle}
+                </span>
               </div>
 
               <div className="space-y-2">
@@ -601,9 +606,9 @@ export default function Practice() {
           </Card>
 
           <Card className="rounded-3xl border shadow-sm">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="mb-4 flex items-center gap-2 font-semibold">
-                <AlertTriangle className="h-4 w-4 text-primary" />
+                <AlertTriangle className="h-4 w-4 shrink-0 text-primary" />
                 What NOT to do
               </div>
 
@@ -622,10 +627,12 @@ export default function Practice() {
         </div>
 
         <Card className="rounded-3xl border shadow-sm">
-          <CardContent className="space-y-6 p-6">
-            <div className="flex items-center gap-2 font-semibold">
-              <Eye className="h-4 w-4 text-primary" />
-              Example references for {selectedStyle} • {selectedFocus}
+          <CardContent className="space-y-6 p-4 sm:p-5 lg:p-6">
+            <div className="flex flex-wrap items-center gap-2 font-semibold">
+              <Eye className="h-4 w-4 shrink-0 text-primary" />
+              <span>
+                Example references for {selectedStyle} • {selectedFocus}
+              </span>
             </div>
 
             {practiceContent.examples.map((section) => (
@@ -636,12 +643,12 @@ export default function Practice() {
                 </p>
 
                 <div
-                  className={`grid gap-4 ${
+                  className={`grid gap-3 sm:gap-4 ${
                     section.images.length === 2
-                      ? "md:grid-cols-2"
+                      ? "grid-cols-1 md:grid-cols-2"
                       : section.images.length === 3
-                        ? "md:grid-cols-3"
-                        : "md:grid-cols-2"
+                        ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                        : "grid-cols-1 md:grid-cols-2"
                   }`}
                 >
                   {section.images.map((image) => (
@@ -649,7 +656,8 @@ export default function Practice() {
                       key={image.src}
                       src={image.src}
                       alt={image.alt}
-                      className="h-56 w-full rounded-2xl border object-cover"
+                      loading="lazy"
+                      className="h-52 w-full rounded-2xl border object-cover sm:h-56"
                     />
                   ))}
                 </div>
@@ -659,15 +667,16 @@ export default function Practice() {
         </Card>
 
         <Card className="rounded-3xl border shadow-sm">
-          <CardContent className="space-y-5 p-6">
+          <CardContent className="space-y-5 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center gap-2 font-semibold">
-              <Eye className="h-4 w-4 text-primary" />
+              <Eye className="h-4 w-4 shrink-0 text-primary" />
               Skin Depth and Layers
             </div>
 
             <img
               src="/images/skin layers.jpg"
               alt="Human skin layers diagram"
+              loading="lazy"
               className="mx-auto max-h-80 w-full max-w-md rounded-2xl border bg-white object-contain"
             />
 
@@ -686,7 +695,7 @@ export default function Practice() {
         </Card>
 
         <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-sm">
-          <CardContent className="space-y-3 p-6">
+          <CardContent className="space-y-3 p-4 sm:p-5 lg:p-6">
             <p className="font-semibold">Real Skin vs Fake Skin</p>
 
             <div className="space-y-2 text-sm leading-6 text-muted-foreground">
@@ -708,7 +717,7 @@ export default function Practice() {
         </Card>
 
         <Card className="rounded-3xl border shadow-sm">
-          <CardContent className="space-y-3 p-6">
+          <CardContent className="space-y-3 p-4 sm:p-5 lg:p-6">
             <p className="font-semibold">Self check before you move on</p>
 
             <div className="space-y-2 text-sm leading-6 text-muted-foreground">
@@ -722,7 +731,7 @@ export default function Practice() {
           </CardContent>
         </Card>
 
-        <Button className="h-14 w-full text-lg">
+        <Button className="h-12 w-full text-base sm:h-14 sm:text-lg">
           <CheckCircle className="mr-2 h-5 w-5" />
           Complete Practice
         </Button>
