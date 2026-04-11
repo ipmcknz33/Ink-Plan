@@ -1,144 +1,147 @@
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   CheckCircle2,
-  CreditCard,
   Crown,
-  Layers3,
-  Settings,
+  Lock,
+  Sparkles,
+  ArrowRight,
+  BadgeCheck,
 } from "lucide-react";
 
-const plans = [
-  {
-    name: "Free",
-    description: "Core access for getting started.",
-    features: [
-      "Basic platform access",
-      "Intro learning sections",
-      "Core dashboard experience",
-    ],
-  },
-  {
-    name: "Pro",
-    description: "Expanded access for committed learners.",
-    features: [
-      "Deeper learning content",
-      "More structured paths",
-      "Additional library access",
-    ],
-  },
-  {
-    name: "Premium",
-    description: "Full platform access for the complete experience.",
-    features: [
-      "Advanced curriculum",
-      "Premium-only resources",
-      "Highest level content access",
-    ],
-  },
-];
-
 export default function Upgrade() {
+  const [, setLocation] = useLocation();
+
+  function handleProCheckout() {
+    setLocation("/checkout/pro");
+  }
+
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-primary">
-            Plans
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            Subscription settings
-          </h1>
-          <p className="mt-2 max-w-3xl text-muted-foreground">
-            This page will become the subscription and billing area for InkPlan.
-            For now, keep it calm and functional while the payment system and
-            tier handling are still being built.
-          </p>
-        </div>
-
-        <Card className="border-border shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-primary" />
-              Upgrade page direction
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-6 text-muted-foreground">
-              This should feel more like a clean account plan page than a hard
-              sales page. Stripe can be connected after the product shell and
-              subscription UI are stable.
+      <div className="space-y-8">
+        <section className="rounded-3xl border bg-card p-6">
+          <div className="max-w-3xl">
+            <p className="text-sm font-medium uppercase tracking-wide text-primary">
+              Checkout
             </p>
-          </CardContent>
-        </Card>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <Card key={plan.name} className="border-border shadow-sm">
-              <CardHeader className="space-y-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  {plan.name === "Premium" ? (
-                    <Crown className="h-5 w-5 text-primary" />
-                  ) : plan.name === "Pro" ? (
-                    <Layers3 className="h-5 w-5 text-primary" />
-                  ) : (
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  )}
-                </div>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              Choose your plan
+            </h1>
+
+            <p className="mt-3 text-muted-foreground">
+              Start with trial, then unlock the next layer with Pro. Premium
+              stays visible but locked until the next build phase.
+            </p>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          {/* PRO */}
+          <Card className="overflow-hidden rounded-3xl border border-primary/40 shadow-sm">
+            <div className="border-b bg-primary/5 p-6">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <CardTitle className="text-base">{plan.name}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="h-5 w-5 text-primary" />
+                    <h2 className="text-2xl font-semibold">Pro</h2>
+                  </div>
+
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {plan.description}
+                    Unlock the next learning layer.
                   </p>
                 </div>
-              </CardHeader>
 
-              <CardContent className="space-y-3">
-                {plan.features.map((feature) => (
-                  <div
-                    key={feature}
-                    className="flex items-start gap-2 text-sm text-muted-foreground"
-                  >
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>{feature}</span>
+                <div className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
+                  Recommended
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold">$24</span>
+                  <span className="pb-1 text-sm text-muted-foreground">
+                    /month
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="space-y-4 p-6">
+              <FeatureItem text="Fine Line starter pack" />
+              <FeatureItem text="Blackwork starter pack" />
+              <FeatureItem text="Traditional unlocked" />
+              <FeatureItem text="Lettering unlocked" />
+
+              <Button className="w-full gap-2" onClick={handleProCheckout}>
+                Checkout Pro
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* PREMIUM */}
+          <Card className="overflow-hidden rounded-3xl border opacity-95">
+            <div className="border-b bg-muted/30 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-primary" />
+                    <h2 className="text-2xl font-semibold">Premium</h2>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <CreditCard className="h-4 w-4 text-primary" />
-                Payment integration later
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Stripe is the right next payment API choice here, but we should
-                wire it after the plan UI, access states, and upgrade flow are
-                visually correct.
-              </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Advanced tier (locked for now)
+                  </p>
+                </div>
+
+                <div className="rounded-full border px-3 py-1 text-xs">
+                  Coming Soon
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold">$49</span>
+                  <span className="pb-1 text-sm text-muted-foreground">
+                    /month
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="space-y-4 p-6">
+              <FeatureItem text="Advanced styles" />
+              <FeatureItem text="AI coaching layer" />
+              <FeatureItem text="Expanded library" />
+
+              <div className="rounded-2xl border bg-muted/20 p-4">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-medium">
+                    Developer upgrade pending
+                  </p>
+                </div>
+              </div>
+
+              <Button variant="outline" disabled className="w-full">
+                Premium Coming Soon
+              </Button>
             </CardContent>
           </Card>
-
-          <Card className="border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Build phase note</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Keep this page visible while developing. Later we can connect it
-                to live billing status, current plan, checkout, and subscription
-                management.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        </section>
       </div>
     </Layout>
+  );
+}
+
+function FeatureItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-3 text-sm text-muted-foreground">
+      <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+      <span>{text}</span>
+    </div>
   );
 }

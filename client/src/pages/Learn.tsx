@@ -1,28 +1,7 @@
 import Layout from "@/components/Layout";
-import AICoachPanel, { type CoachOption } from "@/components/AICoachPanel";
+import AICoachPanel from "@/components/AICoachPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, GraduationCap, PenTool, Target } from "lucide-react";
-
-const coachOptions: CoachOption[] = [
-  {
-    id: "what-is-this-page",
-    label: "What is this page for?",
-    answer:
-      "This page is for building tattoo understanding before execution.\n\nUse Learn to study why strong tattoos work: readability, shape, flow, and decision-making. This should make your practice more intentional, not random.",
-  },
-  {
-    id: "how-should-i-use-it",
-    label: "How should I use this page?",
-    answer:
-      "Go one concept at a time.\n\nStudy the lesson, understand the principle, then apply it on the Practice page. Do not rush through everything just to feel productive.",
-  },
-  {
-    id: "why-does-it-matter",
-    label: "Why does this matter?",
-    answer:
-      "Strong fundamentals make you easier to teach later.\n\nInkPlan is here to help you become more apprenticeship-ready by improving your eye, discipline, and design understanding before you ever touch real skin professionally.",
-  },
-];
 
 const lessonCards = [
   {
@@ -67,11 +46,7 @@ export default function Learn() {
           </div>
         </section>
 
-        <AICoachPanel
-          title="Learn Coach"
-          subtitle="Understand the fundamentals before applying them."
-          options={coachOptions}
-        />
+        <AICoachPanel title="Learn Coach" pageContext="learn" />
 
         <div className="grid gap-6 lg:grid-cols-3">
           {lessonCards.map((lesson) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import {
   ArrowRight,
@@ -18,27 +18,28 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 const teaserItems = [
   {
-    title: "Foundations + structured guidance",
+    title: "3-day trial: Fine Line + Blackwork",
     description:
-      "Beginner-friendly tattoo fundamentals and cleaner practice direction.",
+      "Start with the first layer only so users build stronger fundamentals without getting overwhelmed.",
   },
   {
-    title: "Deeper style study + portfolio support",
+    title: "Subscription unlocks Traditional + Lettering",
     description:
-      "Stronger learning structure across styles and portfolio development.",
+      "The next layer opens deeper style study, stronger design structure, and full reference pack access.",
     locked: true,
   },
   {
-    title: "Expanded AI Tattoo Coach support",
-    description: "Deeper guidance and more tailored support as users progress.",
+    title: "Advanced styles stay locked for now",
+    description:
+      "Higher-complexity study paths stay closed until later so the learning flow stays clear and focused.",
     locked: true,
   },
 ];
 
 const valuePoints = [
-  "Build stronger fundamentals",
-  "Practice with more structure",
-  "Understand styles before specializing",
+  "Build stronger tattoo fundamentals",
+  "Practice with more structure and intention",
+  "Study multiple styles before specializing",
   "Prepare a cleaner portfolio for shops",
 ];
 
@@ -46,6 +47,14 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isHydrated } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+
+  const enableRecruiterPreview =
+    String(import.meta.env.VITE_ENABLE_RECRUITER_PREVIEW).toLowerCase() ===
+    "true";
+
+  const previewHref = useMemo(() => {
+    return "/dashboard";
+  }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -62,6 +71,10 @@ export default function Landing() {
     }
 
     setAuthOpen(true);
+  }
+
+  function handleRecruiterPreview() {
+    setLocation(previewHref);
   }
 
   if (!isHydrated) return null;
@@ -92,19 +105,29 @@ export default function Landing() {
               </div>
 
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={openAuth}
-                  className="w-full justify-center text-white hover:bg-white/5 hover:text-white sm:w-auto"
-                >
-                  {isAuthenticated ? "Dashboard" : "Sign In"}
-                </Button>
+                {enableRecruiterPreview ? (
+                  <Button
+                    variant="ghost"
+                    onClick={handleRecruiterPreview}
+                    className="w-full justify-center text-white hover:bg-white/5 hover:text-white sm:w-auto"
+                  >
+                    Recruiter Preview
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={openAuth}
+                    className="w-full justify-center text-white hover:bg-white/5 hover:text-white sm:w-auto"
+                  >
+                    {isAuthenticated ? "Dashboard" : "Sign In"}
+                  </Button>
+                )}
 
                 <Button
                   onClick={openAuth}
                   className="w-full justify-center bg-red-600 text-white hover:bg-red-500 sm:w-auto"
                 >
-                  {isAuthenticated ? "Dashboard" : "Start Free"}
+                  {isAuthenticated ? "Go to Dashboard" : "Start 3-Day Trial"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -125,11 +148,20 @@ export default function Landing() {
                   </h1>
 
                   <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:mt-5 sm:text-lg sm:leading-7">
-                    InkPlan helps aspiring tattoo artists build stronger
-                    fundamentals, better practice habits, broader style
-                    understanding, and a cleaner portfolio before approaching
-                    apprenticeships.
+                    InkPlan gives aspiring tattoo artists a focused first layer:
+                    a 3-day trial with Fine Line and Blackwork, guided practice,
+                    stronger style awareness, and cleaner portfolio preparation
+                    before approaching real apprenticeships.
                   </p>
+
+                  <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <p className="text-sm leading-6 text-zinc-300">
+                      Start with the right foundation first. Trial users open
+                      Fine Line and Blackwork. Subscription then unlocks
+                      Traditional and Lettering with full reference pack viewing
+                      and downloads.
+                    </p>
+                  </div>
 
                   <div className="mt-5 grid grid-cols-1 gap-2 sm:mt-6 sm:grid-cols-2">
                     {valuePoints.map((point) => (
@@ -148,18 +180,31 @@ export default function Landing() {
                       onClick={openAuth}
                       className="w-full justify-center bg-red-600 text-white hover:bg-red-500 sm:w-auto"
                     >
-                      {isAuthenticated ? "Go to Dashboard" : "Start Free"}
+                      {isAuthenticated
+                        ? "Go to Dashboard"
+                        : "Start 3-Day Trial"}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
 
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={openAuth}
-                      className="w-full justify-center border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white sm:w-auto"
-                    >
-                      {isAuthenticated ? "Open Dashboard" : "Sign In"}
-                    </Button>
+                    {enableRecruiterPreview ? (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={handleRecruiterPreview}
+                        className="w-full justify-center border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white sm:w-auto"
+                      >
+                        View Recruiter Preview
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={openAuth}
+                        className="w-full justify-center border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white sm:w-auto"
+                      >
+                        {isAuthenticated ? "Open Dashboard" : "Sign In"}
+                      </Button>
+                    )}
                   </div>
 
                   <div className="mt-5 flex items-start gap-2 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3">
@@ -177,7 +222,7 @@ export default function Landing() {
                       <div className="mb-5 flex items-center gap-2 text-sm font-medium text-white">
                         <Crown className="h-5 w-5 shrink-0 text-red-400" />
                         <span className="min-w-0 break-words">
-                          AI Tattoo Coach + premium path
+                          Trial path + unlock flow
                         </span>
                       </div>
 
@@ -204,7 +249,7 @@ export default function Landing() {
                                   </span>
                                 ) : (
                                   <span className="inline-flex w-fit items-center rounded-full border border-white/10 px-3 py-1 text-xs text-muted-foreground">
-                                    Included
+                                    Included in trial
                                   </span>
                                 )}
                               </div>
@@ -217,12 +262,20 @@ export default function Landing() {
                             {item.locked && (
                               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/35 px-3">
                                 <div className="rounded-full border border-white/10 bg-background px-4 py-2 text-center text-xs font-medium text-white shadow-sm sm:text-sm">
-                                  Upgrade later to unlock
+                                  Opens after subscription
                                 </div>
                               </div>
                             )}
                           </div>
                         ))}
+                      </div>
+
+                      <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/8 p-4">
+                        <p className="text-sm leading-6 text-zinc-300">
+                          Keep the first stage simple. Trial should open only
+                          the styles that help users build cleaner beginner
+                          discipline first, then unlock more depth later.
+                        </p>
                       </div>
                     </CardContent>
                   </Card>

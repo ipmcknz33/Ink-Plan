@@ -17,6 +17,7 @@ import StyleDetail from "@/pages/StyleDetail";
 import Practice from "@/pages/Practice";
 import Progress from "@/pages/Progress";
 import Upgrade from "@/pages/Upgrade";
+import CheckoutPro from "@/pages/CheckoutPro";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -82,6 +83,12 @@ function Router() {
       <Route path="/progress">
         <ProtectedRoute>
           <Progress />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/checkout/pro">
+        <ProtectedRoute>
+          <CheckoutPro />
         </ProtectedRoute>
       </Route>
 

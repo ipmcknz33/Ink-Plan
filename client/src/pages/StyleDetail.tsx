@@ -240,7 +240,7 @@ const fallbackStyles: StyleItem[] = [
     name: "Fine Line",
     definition:
       "Delicate, minimal tattooing built on restraint, spacing, subtle linework, and clean simplicity.",
-    previewImage: "/images/fine-line-style.png",
+    previewImage: "/images/lettering-style.png",
     tags: ["Delicate", "Minimal", "Clean"],
     rules: [
       "Use restraint and avoid unnecessary complexity.",
@@ -870,7 +870,7 @@ export default function StyleDetail() {
               className="h-full w-full object-cover"
               style={
                 styleId === "lettering"
-                  ? { transform: "translateY(100px)" }
+                  ? { objectPosition: "center center" }
                   : undefined
               }
             />

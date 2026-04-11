@@ -12,7 +12,7 @@ import {
   Eye,
   AlertTriangle,
 } from "lucide-react";
-import AICoachPanel, { type CoachOption } from "../components/AICoachPanel";
+import AICoachPanel from "../components/AICoachPanel";
 
 const defaultStyles = ["Traditional", "Black & Grey", "Japanese", "Lettering"];
 const defaultFocuses = ["Linework", "Shading", "Composition"];
@@ -40,6 +40,10 @@ type ExampleSection = {
     src: string;
     alt: string;
   }[];
+  whatNotToDo: string;
+  practiceTitle: string;
+  practiceTips: string[];
+  coachNote?: string;
 };
 
 type ExampleContent = {
@@ -56,18 +60,29 @@ const sharedShadingExamples: ExampleSection[] = [
       "These examples show inconsistent saturation and uneven fill caused by poor control and rushed passes.",
     images: [
       {
-        src: "/images/shading-blotchy-1.jpg",
+        src: "/images/practice/blotchy-1.png",
         alt: "Blotchy shading example 1",
       },
       {
-        src: "/images/shading-blotchy-2.jpg",
+        src: "/images/practice/blotchy-2.png",
         alt: "Blotchy shading example 2",
       },
       {
-        src: "/images/shading-blotchy-3.jpg",
+        src: "/images/practice/blotchy-3.png",
         alt: "Blotchy shading example 3",
       },
     ],
+    whatNotToDo:
+      "Do not rush your passes, scrub the same area randomly, or chase darkness without control. That creates patchy saturation and a messy healed result.",
+    practiceTitle: "What to practice instead",
+    practiceTips: [
+      "Use a real set of drawing pencils and fill simple shapes evenly from edge to edge.",
+      "Practice controlled pressure changes so the tone stays consistent instead of spotty.",
+      "Work small first: circles, petals, leaves, and simple fades before full tattoo designs.",
+      "Compare your value fills side by side and aim for smooth, even coverage with no hot spots.",
+    ],
+    coachNote:
+      "Even pencil fills teach the same patience and hand control needed for smoother tattoo saturation.",
   },
   {
     title: "Flat / one tone shading",
@@ -75,18 +90,29 @@ const sharedShadingExamples: ExampleSection[] = [
       "These examples show weak value separation where everything sits at the same tone and loses depth.",
     images: [
       {
-        src: "/images/shading-flat-1.jpg",
+        src: "/images/practice/flat-shading-1.png",
         alt: "Flat shading example 1",
       },
       {
-        src: "/images/shading-flat-2.jpg",
+        src: "/images/practice/flat-shading-2.png",
         alt: "Flat shading example 2",
       },
       {
-        src: "/images/shading-flat-3.jpg",
+        src: "/images/practice/flat-shading-3.png",
         alt: "Flat shading example 3",
       },
     ],
+    whatNotToDo:
+      "Do not make every area the same grey value. When lights, mids, and darks collapse together, the tattoo loses form and depth.",
+    practiceTitle: "How to build depth",
+    practiceTips: [
+      "Practice value scales with real pencils from light to dark so your eye learns separation.",
+      "Draw spheres, folds, and simple shapes with a clear light source before complex tattoo imagery.",
+      "Group your values into light, mid, and dark areas instead of shading everything equally.",
+      "If using pen, build contrast intentionally with clean dark anchors and open lighter areas.",
+    ],
+    coachNote:
+      "Depth is not random darkness. Depth comes from controlled value planning and clear contrast decisions.",
   },
   {
     title: "Uneven / dirty gradients",
@@ -94,18 +120,29 @@ const sharedShadingExamples: ExampleSection[] = [
       "These examples show rough transitions, streaky fades, and gradients that do not flow cleanly.",
     images: [
       {
-        src: "/images/shading-gradient-1.jpg",
+        src: "/images/practice/uneven-gradient-example-1.png",
         alt: "Uneven gradient example 1",
       },
       {
-        src: "/images/shading-gradient-2.jpg",
+        src: "/images/practice/uneven-gradients-2.png",
         alt: "Uneven gradient example 2",
       },
       {
-        src: "/images/shading-gradient-3.jpg",
+        src: "/images/practice/uneven-gradients-3.png",
         alt: "Uneven gradient example 3",
       },
     ],
+    whatNotToDo:
+      "Do not leave abrupt jumps between tones or dirty, streaky transitions. A gradient should move gradually, not break apart halfway through.",
+    practiceTitle: "How to train smoother blends",
+    practiceTips: [
+      "Practice gradient bars with drawing pencils from dark to light and back again.",
+      "Layer lightly in stages instead of pressing hard too early and trying to blend it all at once.",
+      "Use color theory studies to understand warm-to-cool or dark-to-light transitions before tattooing color blends.",
+      "Watch the transition zone most closely. That middle area is where dirty blending usually happens.",
+    ],
+    coachNote:
+      "Smooth gradients come from patience, layering, and pressure control — not from forcing the fade in one pass.",
   },
 ];
 
@@ -156,7 +193,7 @@ export default function Practice() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const coachOptions = useMemo<CoachOption[]>(() => {
+  const coachOptions = useMemo<any[]>(() => {
     if (selectedFocus === "Linework") {
       return [
         {
@@ -254,6 +291,17 @@ export default function Practice() {
                 alt: "Traditional bad linework example 2",
               },
             ],
+            whatNotToDo:
+              "Do not scratch in lines, hesitate through curves, or keep tracing over the same path trying to fix it.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Draw straight lines, S-curves, circles, and dagger shapes with one clean pull.",
+              "Use tracing paper to repeat the same flash shapes until your hand movement becomes more stable.",
+              "Practice bold traditional forms with clear starts and stops instead of sketchy searching lines.",
+              "Train your wrist and elbow movement separately so curves feel intentional, not corrected halfway through.",
+            ],
+            coachNote:
+              "Traditional linework should feel deliberate and readable before any shading is added.",
           },
           {
             title: "Too shallow / too light",
@@ -273,6 +321,17 @@ export default function Practice() {
                 alt: "Traditional too shallow tattoo example 3",
               },
             ],
+            whatNotToDo:
+              "Do not confuse a weak, timid pass with clean technique. Too-light lines can look neat fresh and still heal poorly.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Train line confidence on paper first with dark, committed pencil or pen passes.",
+              "Study dermis placement and compare healed references so you understand what proper depth should achieve.",
+              "Practice steady pressure through the full line instead of lifting early or fading out unintentionally.",
+              "Review healed results, not just fresh tattoos, so your eye learns what stable saturation really looks like.",
+            ],
+            coachNote:
+              "A line should look intentional and settled, not faint, frightened, or accidental.",
           },
           {
             title: "Blowout (too deep)",
@@ -292,6 +351,17 @@ export default function Practice() {
                 alt: "Traditional blowout example 3",
               },
             ],
+            whatNotToDo:
+              "Do not force depth, overwork soft skin, or confuse pressure with control. Blowouts come from losing respect for skin depth.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Study skin layers and learn exactly where the dermis sits before treating depth casually.",
+              "Practice machine discipline on fake skin with proper stretch habits instead of rushing for darker lines.",
+              "Compare too-shallow, correct-depth, and too-deep examples so you can spot the difference early.",
+              "Keep your drawing reps clean and controlled so your hand learns precision before skin work.",
+            ],
+            coachNote:
+              "Depth control is a discipline problem, not a speed problem.",
           },
         ],
       };
@@ -340,6 +410,14 @@ export default function Practice() {
                 src: "/images/black-grey-linework-2.jpg",
                 alt: "Black and grey linework example 2",
               },
+            ],
+            whatNotToDo:
+              "Do not let structure get soft and uncertain before shading starts.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Build portraits and black-and-grey subjects with clear construction lines first.",
+              "Use cleaner edge studies so the base drawing still reads without soft shading.",
+              "Practice controlled line hierarchy so outlines support value instead of fighting it.",
             ],
           },
         ],
@@ -390,6 +468,14 @@ export default function Practice() {
                 alt: "Japanese linework example 2",
               },
             ],
+            whatNotToDo:
+              "Do not break the flow of large forms with nervous linework or early over-detailing.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Use brush pens or pencils to practice long flowing body lines and major silhouettes first.",
+              "Train composition with large shape grouping before scales, waves, and texture.",
+              "Redraw simple koi, masks, and flowers focusing on movement and spacing before detail.",
+            ],
           },
         ],
       };
@@ -439,6 +525,15 @@ export default function Practice() {
                 alt: "Lettering linework example 2",
               },
             ],
+            whatNotToDo:
+              "Do not sacrifice readability for flourishes, corrections, or uneven spacing.",
+            practiceTitle: "What to practice instead",
+            practiceTips: [
+              "Practice alphabet drills with real pencils before jumping into full words.",
+              "Train spacing by writing the same word repeatedly with matching stem rhythm.",
+              "Use tracing overlays to compare alignment, slant, and width consistency.",
+              "If using pen, focus on clean contrast and letter clarity before decoration.",
+            ],
           },
         ],
       };
@@ -486,6 +581,14 @@ export default function Practice() {
               src: "/images/composition-2.jpg",
               alt: "Composition example 2",
             },
+          ],
+          whatNotToDo:
+            "Do not let every element fight for attention or pile detail into a layout that does not read clearly.",
+          practiceTitle: "What to practice instead",
+          practiceTips: [
+            "Thumbnail small layout ideas before committing to detail.",
+            "Practice focal-point hierarchy so the eye knows where to land first.",
+            "Simplify shapes before adding texture, shading, or ornament.",
           ],
         },
       ],
@@ -538,11 +641,7 @@ export default function Practice() {
           </div>
         </section>
 
-        <AICoachPanel
-          title="Practice Coach"
-          subtitle="Pick a question for focused guidance on this practice session."
-          options={coachOptions}
-        />
+        <AICoachPanel title="Practice Coach" pageContext="practice" />
 
         <Card className="rounded-3xl border shadow-sm">
           <CardContent className="space-y-5 p-4 text-center sm:space-y-6 sm:p-5 lg:p-6">
@@ -660,6 +759,38 @@ export default function Practice() {
                       className="h-52 w-full rounded-2xl border object-cover sm:h-56"
                     />
                   ))}
+                </div>
+
+                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                  <p className="text-sm font-medium text-red-400">
+                    What not to do
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {section.whatNotToDo}
+                  </p>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-green-500/20 bg-green-500/5 p-4">
+                  <p className="text-sm font-medium text-green-400">
+                    {section.practiceTitle}
+                  </p>
+
+                  <div className="mt-2 space-y-2">
+                    {section.practiceTips.map((tip) => (
+                      <p
+                        key={tip}
+                        className="text-sm leading-6 text-muted-foreground"
+                      >
+                        • {tip}
+                      </p>
+                    ))}
+                  </div>
+
+                  {section.coachNote ? (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      {section.coachNote}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))}

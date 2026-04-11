@@ -1,8 +1,13 @@
 import type { Express, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import type session from "express-session";
+import Stripe from "stripe";
 import { storage } from "./storage";
 import { generateTattooCoachReply } from "./services/ai";
+
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY ?? "";
+
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 type SessionWithUser = session.Session & {
   userId?: string;
@@ -253,6 +258,74 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.status(500).json({ error: "Failed to fetch current user" });
     }
   });
+
+  app.post(
+    "/api/billing/create-checkout-session",
+    async (req: Request, res: Response) => {
+      const request = req as RequestWithSession;
+
+      try {
+        if (!request.session?.userId) {
+          res.status(401).json({ error: "Not authenticated" });
+          return;
+        }
+
+        if (!stripe) {
+          res.status(500).json({
+            error:
+              "Stripe is not configured. Add STRIPE_SECRET_KEY to your server environment.",
+          });
+          return;
+        }
+
+        const plan = String(req.body?.plan ?? "")
+          .trim()
+          .toLowerCase();
+
+        if (plan !== "pro") {
+          res.status(400).json({ error: "Invalid plan selected" });
+          return;
+        }
+
+        const origin = `${req.protocol}://${req.get("host")}`;
+
+        const checkoutSession = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "InkPlan Pro",
+                  description: "Unlock Traditional and Lettering starter packs",
+                },
+                unit_amount: 2400,
+                recurring: {
+                  interval: "month",
+                },
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: `${origin}/upgrade?checkout=success`,
+          cancel_url: `${origin}/upgrade?checkout=cancelled`,
+        });
+
+        if (!checkoutSession.url) {
+          res
+            .status(500)
+            .json({ error: "Stripe did not return a checkout URL" });
+          return;
+        }
+
+        res.status(200).json({ url: checkoutSession.url });
+      } catch (error) {
+        console.error("Create checkout session error:", error);
+        res.status(500).json({ error: "Failed to create checkout session" });
+      }
+    },
+  );
 
   app.post("/api/ai/coach", async (req: Request, res: Response) => {
     try {

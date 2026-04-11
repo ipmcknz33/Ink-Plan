@@ -1,284 +1,378 @@
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "wouter";
+import AICoachPanel from "@/components/AICoachPanel";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Lock, ArrowRight } from "lucide-react";
+import { useLocation } from "wouter";
 import {
-  ArrowRight,
-  BookOpen,
-  ImageIcon,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  Target,
-} from "lucide-react";
-import { useStyles } from "@/hooks/use-api";
-import { useMemo } from "react";
+  ensureTrialStarted,
+  getAccessPhase,
+  getTrialDaysLeftLabel,
+  type AccessPhase,
+} from "@/lib/access";
 
 type StyleItem = {
   id: string;
   name: string;
-  definition: string;
-  previewImage: string;
-  tags: string[];
+  description: string;
+  image: string;
 };
 
-const fallbackStyles: StyleItem[] = [
+const STYLE_IMAGE_MAP: Record<string, string> = {
+  "fine-line": "/images/reference/fineline/fineline-cover.png",
+  blackwork: "/images/reference/blackwork/blackwork-cover-img.png",
+  traditional: "/images/reference/traditional/traditional-cover.png",
+  lettering: "/images/reference/lettering/letter-cover.png",
+  "black-grey": "/images/reference/black-grey/black&grey-cover.png",
+  japanese: "/images/reference/japanese/jap-trad-cover.png",
+  chicano: "/images/reference/chicano/chicano-cover.png",
+  "japanese-realism":
+    "/images/reference/japanese-realism/japanese-realism-cover.png",
+  geometric: "/images/reference/geometric/geometric-cover.png",
+  biomechanical: "/images/reference/biomechanical/biomechanical-cover.png",
+  polynesian: "/images/reference/polynesian/polynesian-cover.png",
+  "color-realism": "/images/reference/color-realism/color-realism-cover.png",
+  surrealism: "/images/reference/surrealism/surrealism-cover.png",
+  watercolor: "/images/reference/watercolor/watercolor-cover.png",
+};
+
+const STYLES: StyleItem[] = [
+  {
+    id: "fine-line",
+    name: "Fine Line",
+    description:
+      "Clean precision, spacing control, delicate structure, and disciplined hand-drawn repetition.",
+    image: STYLE_IMAGE_MAP["fine-line"],
+  },
+  {
+    id: "blackwork",
+    name: "Blackwork",
+    description:
+      "Bold shape language, contrast, clarity, and stronger visual confidence.",
+    image: STYLE_IMAGE_MAP["blackwork"],
+  },
   {
     id: "traditional",
-    name: "American Traditional",
-    definition:
-      "Bold outlines, strong readability, and classic tattoo structure built to hold up clearly.",
-    previewImage: "/images/traditional-style.png",
-    tags: ["Bold", "Classic", "Readable"],
-  },
-  {
-    id: "black-grey",
-    name: "Black & Grey",
-    definition:
-      "Smooth shading, value control, and clean form separation built through light, mid, and dark balance.",
-    previewImage: "/images/black-grey-style.png",
-    tags: ["Smooth", "Value", "Contrast"],
-  },
-  {
-    id: "japanese",
-    name: "Japanese",
-    definition:
-      "Flowing composition, movement, hierarchy, and strong large-form design.",
-    previewImage: "/images/japanese-style.png",
-    tags: ["Flow", "Movement", "Large Forms"],
+    name: "Traditional",
+    description:
+      "Strong silhouettes, bold readability, classic structure, and timeless tattoo fundamentals.",
+    image: STYLE_IMAGE_MAP["traditional"],
   },
   {
     id: "lettering",
     name: "Lettering",
-    definition:
-      "Clean typography, spacing, rhythm, and readable tattoo design.",
-    previewImage: "/images/lettering-style.png",
-    tags: ["Typography", "Spacing", "Readable"],
+    description:
+      "Letter balance, spacing, rhythm, and cleaner hand-drawn word structure.",
+    image: STYLE_IMAGE_MAP["lettering"],
   },
   {
-    id: "neo-traditional",
-    name: "Neo Traditional",
-    definition:
-      "A richer, more illustrative evolution of Traditional with stronger color, stylized forms, and extra detail.",
-    previewImage: "/images/neo-traditional-style.png",
-    tags: ["Stylized", "Color", "Illustrative"],
+    id: "black-grey",
+    name: "Black & Grey Realism",
+    description:
+      "Value control, softness, patience, observation, and stronger rendering discipline.",
+    image: STYLE_IMAGE_MAP["black-grey"],
   },
   {
-    id: "fine-line",
-    name: "Fine Line",
-    definition:
-      "Delicate, minimal tattooing built on restraint, spacing, subtle linework, and clean simplicity.",
-    previewImage: "/images/fine-line-style.png",
-    tags: ["Delicate", "Minimal", "Clean"],
+    id: "japanese",
+    name: "Japanese Traditional",
+    description:
+      "Flow, movement, motif discipline, and stronger large-form composition thinking.",
+    image: STYLE_IMAGE_MAP["japanese"],
+  },
+  {
+    id: "chicano",
+    name: "Chicano",
+    description:
+      "Lettering rhythm, black-and-grey storytelling, and respect for stylistic identity.",
+    image: STYLE_IMAGE_MAP["chicano"],
+  },
+  {
+    id: "japanese-realism",
+    name: "Japanese Realism",
+    description:
+      "Advanced realism control mixed with movement, motif structure, and storytelling flow.",
+    image: STYLE_IMAGE_MAP["japanese-realism"],
+  },
+  {
+    id: "geometric",
+    name: "Geometric",
+    description:
+      "Precision, repeatability, symmetry, spacing, and measured visual structure.",
+    image: STYLE_IMAGE_MAP["geometric"],
+  },
+  {
+    id: "biomechanical",
+    name: "Biomechanical",
+    description:
+      "Complex construction, texture logic, and advanced form-building discipline.",
+    image: STYLE_IMAGE_MAP["biomechanical"],
+  },
+  {
+    id: "polynesian",
+    name: "Polynesian",
+    description:
+      "Pattern discipline, placement structure, and cultural respect in design study.",
+    image: STYLE_IMAGE_MAP["polynesian"],
+  },
+  {
+    id: "color-realism",
+    name: "Color Realism",
+    description:
+      "Advanced color control, value relationships, rendering accuracy, and patience.",
+    image: STYLE_IMAGE_MAP["color-realism"],
+  },
+  {
+    id: "surrealism",
+    name: "Surrealism",
+    description:
+      "Concept-driven imagery, symbolism, imagination, and unusual composition thinking.",
+    image: STYLE_IMAGE_MAP["surrealism"],
+  },
+  {
+    id: "watercolor",
+    name: "Watercolor",
+    description:
+      "Soft transitions, painterly movement, restraint, and controlled visual flow.",
+    image: STYLE_IMAGE_MAP["watercolor"],
   },
 ];
 
-const flashSheetByStyleId: Record<string, string> = {
-  traditional: "/images/traditional-flash-sheet.jpg",
-  "black-grey": "/images/black-grey-flash-sheet.jpg",
-  japanese: "/images/japanese-flash-sheet.jpg",
-  lettering: "/images/lettering-flash-sheet.jpg",
-  "neo-traditional": "/images/neo-traditional-flash-sheet.jpg",
-  "fine-line": "/images/fine-line-flash-sheet.jpg",
-};
+const STYLE_COACH_OPTIONS: any[] = [
+  {
+    id: "start-fine-line",
+    label: "What should I focus on first in Fine Line?",
+    answer:
+      "Start with clean line control, spacing, and redraw repetition. Keep your first reps hand drawn, use simple subjects, and focus on consistency before complexity.",
+  },
+  {
+    id: "study-blackwork",
+    label: "How do I practice Blackwork by hand without rushing?",
+    answer:
+      "Use bold simple shapes first. Practice filling evenly, controlling edges, and keeping negative space intentional. Do not jump into complex ornamental layouts too early.",
+  },
+  {
+    id: "portfolio-binder",
+    label: "What should I put in my first portfolio binder?",
+    answer:
+      "Lead with your cleanest hand-drawn pages: Fine Line studies, Blackwork studies, simple flash redraws, lettering practice, and repeated subject pages that show discipline.",
+  },
+  {
+    id: "avoid-copying",
+    label: "How do I study styles without copying tattoos line for line?",
+    answer:
+      "Study the rules, not just the image. Observe shape language, spacing, line weight, flow, and composition. Then redraw original studies using those principles instead of cloning another artist’s tattoo.",
+  },
+  {
+    id: "approach-shop",
+    label: "How should I approach tattooing with more respect?",
+    answer:
+      "Keep your first layer focused on fundamentals, hand-drawn repetition, and humility. This app is preparation, not a replacement for apprenticeship, bloodborne training, or real-skin procedures.",
+  },
+  {
+    id: "next-step",
+    label: "What should I study next after trial?",
+    answer:
+      "After Fine Line and Blackwork, move into Traditional and Lettering. Those styles sharpen readability, spacing, structure, and stronger design discipline before advanced styles.",
+  },
+];
 
-export default function StylesList() {
-  const stylesQuery = useStyles();
-
-  const styles = (stylesQuery.data as StyleItem[] | undefined) ?? [];
-  const isLoading = stylesQuery.isLoading;
-
-  const displayStyles = useMemo<StyleItem[]>(() => {
-    if (styles.length > 0) {
-      return styles;
-    }
-
-    return fallbackStyles;
-  }, [styles]);
-
-  if (isLoading && styles.length === 0) {
-    return (
-      <Layout>
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Layout>
+function getAvailableStyles(phase: AccessPhase): StyleItem[] {
+  if (phase === "subscribed") {
+    return STYLES.filter((style) =>
+      ["fine-line", "blackwork", "traditional", "lettering"].includes(style.id),
     );
   }
+
+  if (phase === "trial") {
+    return STYLES.filter((style) =>
+      ["fine-line", "blackwork"].includes(style.id),
+    );
+  }
+
+  return [];
+}
+
+function getStarterLockedPreviewStyles(phase: AccessPhase): StyleItem[] {
+  if (phase === "subscribed") {
+    return [];
+  }
+
+  return STYLES.filter((style) =>
+    ["traditional", "lettering"].includes(style.id),
+  );
+}
+
+function getAdvancedLockedPreviewStyles(): StyleItem[] {
+  return STYLES.filter(
+    (style) =>
+      !["fine-line", "blackwork", "traditional", "lettering"].includes(
+        style.id,
+      ),
+  );
+}
+
+function StyleCard({
+  style,
+  locked,
+  onClick,
+}: {
+  style: StyleItem;
+  locked: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Card className="group overflow-hidden rounded-2xl border border-white/8 bg-card shadow-none transition-colors hover:border-red-500/30">
+      <div className="relative h-48 w-full overflow-hidden bg-white/[0.03]">
+        <img
+          src={style.image}
+          alt={style.name}
+          className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
+            locked ? "opacity-55 grayscale-[20%]" : ""
+          }`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent" />
+
+        {locked ? (
+          <div className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-3 py-1 text-xs text-white">
+            <Lock className="h-3.5 w-3.5" />
+            Locked
+          </div>
+        ) : null}
+      </div>
+
+      <CardContent className="space-y-4 p-5">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-white">{style.name}</h3>
+          <p className="text-sm leading-6 text-zinc-400">{style.description}</p>
+        </div>
+
+        <Button
+          onClick={onClick}
+          variant={locked ? "outline" : "default"}
+          className="w-full gap-2"
+        >
+          {locked ? "Unlock Style" : "Open Style"}
+          {locked ? (
+            <Lock className="h-4 w-4" />
+          ) : (
+            <ArrowRight className="h-4 w-4" />
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function StylesList() {
+  const [, setLocation] = useLocation();
+
+  ensureTrialStarted();
+
+  const phase = getAccessPhase();
+  const trialLabel = getTrialDaysLeftLabel();
+
+  const availableStyles = getAvailableStyles(phase);
+  const starterLockedPreviewStyles = getStarterLockedPreviewStyles(phase);
+  const advancedLockedPreviewStyles = getAdvancedLockedPreviewStyles();
 
   return (
     <Layout>
       <div className="space-y-8">
-        <section className="rounded-3xl border border-white/8 bg-card p-6 shadow-none md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-red-300">
-                <Sparkles className="h-3.5 w-3.5 text-red-400" />
-                Study styles the right way
+        <section className="rounded-3xl border border-white/8 bg-card shadow-none">
+          <div className="space-y-4 p-5 sm:p-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+                Styles
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-zinc-400">
+                Study styles in the right order. InkPlan is here to help you
+                build stronger fundamentals, better style awareness, and a
+                cleaner beginner portfolio. It is not a replacement for a real
+                apprenticeship.
+              </p>
+
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-zinc-300">
+                {phase === "subscribed"
+                  ? "Subscription active"
+                  : phase === "trial"
+                    ? `3-day trial active • ${trialLabel}`
+                    : "Trial ended • subscribe to continue"}
               </div>
-
-              <div className="space-y-3">
-                <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  Choose a style to study
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-zinc-400 md:text-base">
-                  Explore tattoo styles, understand what makes them readable,
-                  and study the rules before practicing them. Build broad
-                  understanding first, then narrow your direction later.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <Card className="border-white/8 bg-white/[0.03] shadow-none">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
-                    <BookOpen className="h-5 w-5 text-red-400" />
-                  </div>
-                  <p className="font-medium text-white">Study first</p>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    Learn the structure behind the look.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-white/8 bg-white/[0.03] shadow-none">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
-                    <Target className="h-5 w-5 text-red-400" />
-                  </div>
-                  <p className="font-medium text-white">Train your eye</p>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    Spot clarity, flow, and common mistakes.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-white/8 bg-white/[0.03] shadow-none">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
-                    <ShieldCheck className="h-5 w-5 text-red-400" />
-                  </div>
-                  <p className="font-medium text-white">
-                    Practice with intention
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    Use study references to support cleaner drills.
-                  </p>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-red-500/12 bg-red-500/5 p-4">
-          <p className="text-sm leading-6 text-zinc-300">
-            <span className="font-semibold text-white">Free access:</span> 6
-            core styles to build broad foundation first.
-            <span className="ml-2 font-semibold text-white">
-              Later tiers:
-            </span>{" "}
-            more styles, deeper drills, stronger AI guidance, and expanded study
-            tracks.
-          </p>
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Available now</h2>
+            <p className="mt-2 text-sm text-zinc-400">
+              Trial users see Fine Line and Blackwork. Subscription opens
+              Traditional and Lettering next.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {availableStyles.map((style) => (
+              <StyleCard
+                key={style.id}
+                style={style}
+                locked={false}
+                onClick={() => setLocation(`/styles/${style.id}`)}
+              />
+            ))}
+          </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {displayStyles.map((style) => {
-            const flashSheetSrc = flashSheetByStyleId[style.id];
+        {starterLockedPreviewStyles.length > 0 ? (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Opens with subscription
+              </h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Traditional and Lettering are the next layer after the trial
+                foundation.
+              </p>
+            </div>
 
-            return (
-              <Link key={style.id} href={`/styles/${style.id}`}>
-                <Card
-                  className="group h-full cursor-pointer overflow-hidden rounded-3xl border border-white/8 bg-card shadow-none transition-all duration-300 hover:border-red-500/30"
-                  data-testid={`card-style-${style.id}`}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-zinc-900">
-                    <img
-                      src={style.previewImage}
-                      alt={style.name}
-                      className="h-full w-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {starterLockedPreviewStyles.map((style) => (
+                <StyleCard
+                  key={style.id}
+                  style={style}
+                  locked={true}
+                  onClick={() => setLocation("/upgrade")}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {style.tags.slice(0, 3).map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="border-0 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
+        {advancedLockedPreviewStyles.length > 0 ? (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Later advanced styles
+              </h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Keep the path visible without overwhelming the first stage.
+              </p>
+            </div>
 
-                      <h3 className="text-2xl font-semibold text-white">
-                        {style.name}
-                      </h3>
-                    </div>
-                  </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {advancedLockedPreviewStyles.map((style) => (
+                <StyleCard
+                  key={style.id}
+                  style={style}
+                  locked={true}
+                  onClick={() => setLocation("/upgrade")}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-                  <CardContent className="space-y-4 p-5">
-                    <p className="line-clamp-3 text-sm leading-6 text-zinc-400">
-                      {style.definition}
-                    </p>
-
-                    {flashSheetSrc ? (
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                          <ImageIcon className="h-3.5 w-3.5 text-red-400" />
-                          AI Flash Sheet Preview
-                        </div>
-
-                        <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-950">
-                          <img
-                            src={flashSheetSrc}
-                            alt={`${style.name} flash sheet`}
-                            className="h-48 w-full object-cover object-top"
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="flex flex-wrap gap-2">
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-white/10 text-zinc-300"
-                      >
-                        Study Guide
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-white/10 text-zinc-300"
-                      >
-                        Rules
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-white/10 text-zinc-300"
-                      >
-                        AI Flash Sheet
-                      </Badge>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="flex items-center justify-between p-5 pt-0">
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                      Open study page
-                    </span>
-
-                    <span className="flex items-center gap-1 text-sm font-semibold text-white transition-transform group-hover:translate-x-1">
-                      View
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </CardFooter>
-                </Card>
-              </Link>
-            );
-          })}
-        </section>
+        <AICoachPanel title="AI Style Coach" pageContext="styles" />
       </div>
     </Layout>
   );
