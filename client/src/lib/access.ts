@@ -27,10 +27,38 @@ export const TRIAL_STORAGE_KEY = "inkplan_trial_started_at";
 export const SUBSCRIPTION_STORAGE_KEY = "inkplan_is_subscribed";
 export const TRIAL_LENGTH_MS = 3 * 24 * 60 * 60 * 1000;
 
-export function getTrialStartedAt(): number | null {
+function safeReadLocalStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
 
-  const raw = window.localStorage.getItem(TRIAL_STORAGE_KEY);
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeWriteLocalStorage(key: string, value: string) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function safeRemoveLocalStorage(key: string) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function getTrialStartedAt(): number | null {
+  const raw = safeReadLocalStorage(TRIAL_STORAGE_KEY);
   if (!raw) return null;
 
   const parsed = Number(raw);
@@ -38,59 +66,49 @@ export function getTrialStartedAt(): number | null {
 }
 
 export function ensureTrialStarted(): number | null {
-  if (typeof window === "undefined") return null;
-
   const existing = getTrialStartedAt();
   if (existing) return existing;
 
   const now = Date.now();
-  window.localStorage.setItem(TRIAL_STORAGE_KEY, String(now));
+  safeWriteLocalStorage(TRIAL_STORAGE_KEY, String(now));
   return now;
 }
 
 export function setSubscribed(value: boolean) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(
-    SUBSCRIPTION_STORAGE_KEY,
-    value ? "true" : "false",
-  );
+  safeWriteLocalStorage(SUBSCRIPTION_STORAGE_KEY, value ? "true" : "false");
 }
 
 export function clearSubscription() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY);
+  safeRemoveLocalStorage(SUBSCRIPTION_STORAGE_KEY);
 }
 
 export function resetTrial() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(TRIAL_STORAGE_KEY);
+  safeRemoveLocalStorage(TRIAL_STORAGE_KEY);
 }
 
 export function resetAccessState() {
-  if (typeof window === "undefined") return;
   clearSubscription();
   resetTrial();
 }
 
 export function getIsSubscribed(): boolean {
-  if (typeof window === "undefined") return false;
-
-  const raw = window.localStorage.getItem(SUBSCRIPTION_STORAGE_KEY);
-
+  const raw = safeReadLocalStorage(SUBSCRIPTION_STORAGE_KEY);
   if (!raw) return false;
 
-  return raw.toLowerCase().trim() === "true";
+  return raw.trim().toLowerCase() === "true";
 }
 
 export function getTrialExpiresAt(): number | null {
   const startedAt = getTrialStartedAt();
   if (!startedAt) return null;
+
   return startedAt + TRIAL_LENGTH_MS;
 }
 
 export function hasTrialExpired(): boolean {
   const expiresAt = getTrialExpiresAt();
   if (!expiresAt) return false;
+
   return Date.now() >= expiresAt;
 }
 
@@ -100,8 +118,7 @@ export function getAccessPhase(): AccessPhase {
   const startedAt = getTrialStartedAt();
   if (!startedAt) return "trial";
 
-  const expiresAt = startedAt + TRIAL_LENGTH_MS;
-  return Date.now() < expiresAt ? "trial" : "expired";
+  return hasTrialExpired() ? "expired" : "trial";
 }
 
 export function getTrialTimeLeftMs(): number {
@@ -114,9 +131,11 @@ export function getTrialTimeLeftMs(): number {
 
 export function getTrialDaysLeftLabel(): string {
   const ms = getTrialTimeLeftMs();
-  const days = Math.ceil(ms / (24 * 60 * 60 * 1000));
 
   if (ms <= 0) return "Trial ended";
+
+  const days = Math.ceil(ms / (24 * 60 * 60 * 1000));
+
   if (days <= 1) return "Less than 1 day left";
   return `${days} days left`;
 }

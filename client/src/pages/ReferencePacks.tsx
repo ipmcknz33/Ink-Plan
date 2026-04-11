@@ -21,7 +21,6 @@ import {
 } from "@/lib/access";
 
 type DisplayTier = "trial" | "subscriber" | "premium";
-type Membership = "trial" | "subscriber";
 
 export type Pack = {
   title: string;
@@ -243,23 +242,19 @@ const referenceData: ReferenceSection[] = [
   },
 ];
 
-function resolveMembership(phase: AccessPhase): Membership {
-  return phase === "subscribed" ? "subscriber" : "trial";
-}
-
-function canAccessTier(packTier: DisplayTier, membership: Membership) {
+function isPackUnlocked(packTier: DisplayTier, phase: AccessPhase) {
   if (packTier === "trial") return true;
-  if (packTier === "subscriber") return membership === "subscriber";
+  if (packTier === "subscriber") return phase === "subscribed";
   return false;
 }
 
-function getTierBadge(packTier: DisplayTier, membership: Membership) {
+function getTierBadge(packTier: DisplayTier, phase: AccessPhase) {
   if (packTier === "trial") {
-    return membership === "trial" ? "Trial" : "Open";
+    return phase === "subscribed" ? "Open" : "Trial";
   }
 
   if (packTier === "subscriber") {
-    return membership === "subscriber" ? "Open" : "Subscription";
+    return phase === "subscribed" ? "Open" : "Subscription";
   }
 
   return "Premium";
@@ -471,18 +466,18 @@ function ReferencePackViewer({
 
 function PackCard({
   section,
-  membership,
+  phase,
   onOpen,
   onUpgrade,
 }: {
   section: ReferenceSection;
-  membership: Membership;
+  phase: AccessPhase;
   onOpen: () => void;
   onUpgrade: () => void;
 }) {
   const pack = section.packs[0];
-  const unlocked = canAccessTier(pack.tier, membership);
-  const accessLabel = getTierBadge(pack.tier, membership);
+  const unlocked = isPackUnlocked(pack.tier, phase);
+  const accessLabel = getTierBadge(pack.tier, phase);
   const imageCount = pack.images?.length ?? 0;
 
   return (
@@ -504,8 +499,8 @@ function PackCard({
 
       <button
         type="button"
-        onClick={onOpen}
-        disabled={!unlocked || !pack.images || pack.images.length === 0}
+        onClick={unlocked ? onOpen : onUpgrade}
+        disabled={unlocked ? !pack.images || pack.images.length === 0 : false}
         className="group relative block w-full overflow-hidden border-b text-left"
       >
         <img
@@ -581,7 +576,6 @@ export default function ReferencePacks() {
   const [, setLocation] = useLocation();
   const [phase, setPhase] = useState<AccessPhase>("trial");
   const [trialLabel, setTrialLabel] = useState("3 days left");
-  const [membership, setMembership] = useState<Membership>("trial");
 
   const [viewerPack, setViewerPack] = useState<ViewerPack | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -591,7 +585,6 @@ export default function ReferencePacks() {
     const nextPhase = getAccessPhase();
     setPhase(nextPhase);
     setTrialLabel(getTrialDaysLeftLabel());
-    setMembership(resolveMembership(nextPhase));
   }, []);
 
   const trialSections = useMemo(
@@ -613,14 +606,15 @@ export default function ReferencePacks() {
 
   const accessiblePackCount = useMemo(() => {
     return referenceData.filter((section) =>
-      canAccessTier(section.packs[0].tier, membership),
+      isPackUnlocked(section.packs[0].tier, phase),
     ).length;
-  }, [membership]);
+  }, [phase]);
 
   const openViewer = (section: ReferenceSection, startIndex = 0) => {
     const pack = section.packs[0];
+
     if (!pack.images || pack.images.length === 0) return;
-    if (!canAccessTier(pack.tier, membership)) return;
+    if (!isPackUnlocked(pack.tier, phase)) return;
 
     setViewerPack({
       style: section.style,
@@ -669,7 +663,7 @@ export default function ReferencePacks() {
             <span>{accessiblePackCount} accessible packs right now.</span>
 
             <span className="rounded-full border px-3 py-1 text-xs">
-              {membership === "subscriber"
+              {phase === "subscribed"
                 ? "Subscription active"
                 : phase === "trial"
                   ? `3-day trial active • ${trialLabel}`
@@ -692,7 +686,7 @@ export default function ReferencePacks() {
               <PackCard
                 key={section.style}
                 section={section}
-                membership={membership}
+                phase={phase}
                 onOpen={() => openViewer(section, 0)}
                 onUpgrade={() => setLocation("/upgrade")}
               />
@@ -714,7 +708,7 @@ export default function ReferencePacks() {
               <PackCard
                 key={section.style}
                 section={section}
-                membership={membership}
+                phase={phase}
                 onOpen={() => openViewer(section, 0)}
                 onUpgrade={() => setLocation("/upgrade")}
               />
@@ -736,7 +730,7 @@ export default function ReferencePacks() {
               <PackCard
                 key={section.style}
                 section={section}
-                membership={membership}
+                phase={phase}
                 onOpen={() => openViewer(section, 0)}
                 onUpgrade={() => setLocation("/upgrade")}
               />

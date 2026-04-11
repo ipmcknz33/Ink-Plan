@@ -22,6 +22,9 @@ type RequestWithSession = Request & {
   };
 };
 
+type AccessPhase = "trial" | "subscribed" | "expired";
+type SubscriptionTier = "free" | "pro" | "premium";
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -50,6 +53,71 @@ async function ensureUserProfile(userId: string) {
       subscriptionTier: "free",
     });
   }
+}
+
+function toDateValue(value?: Date | string | null): Date | null {
+  if (!value) return null;
+
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getAccessStatus(params: {
+  user: {
+    id: string;
+    email: string;
+    createdAt?: Date | string | null;
+  };
+  profile:
+    | {
+        subscriptionTier?: "free" | "pro" | "premium" | string | null;
+      }
+    | null
+    | undefined;
+}) {
+  const subscriptionTier = (params.profile?.subscriptionTier ??
+    "free") as SubscriptionTier;
+
+  const createdAt = toDateValue(params.user.createdAt ?? null);
+  const trialStartedAt = createdAt ? createdAt.toISOString() : null;
+
+  const trialEndsAt = createdAt
+    ? new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
+  let phase: AccessPhase = "trial";
+
+  if (subscriptionTier === "pro" || subscriptionTier === "premium") {
+    phase = "subscribed";
+  } else if (trialEndsAt) {
+    phase =
+      new Date(trialEndsAt).getTime() > Date.now() ? "trial" : "expired";
+  }
+
+  return {
+    phase,
+    subscriptionTier,
+    trialStartedAt,
+    trialEndsAt,
+    accessibleStyles:
+      phase === "subscribed"
+        ? ["fine-line", "blackwork", "traditional", "lettering"]
+        : phase === "trial"
+          ? ["fine-line", "blackwork"]
+          : [],
+    lockedPreview: [
+      "black-grey",
+      "japanese",
+      "chicano",
+      "japanese-realism",
+      "geometric",
+      "biomechanical",
+      "polynesian",
+      "color-realism",
+      "surrealism",
+      "watercolor",
+    ],
+  };
 }
 
 export async function registerRoutes(app: Express): Promise<void> {
@@ -94,6 +162,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       await ensureUserProfile(user.id);
+      const profile = await storage.getUserProfile(user.id);
 
       request.session.userId = user.id;
 
@@ -106,6 +175,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         res.status(201).json({
           user: toSafeUser(user),
+          access: getAccessStatus({
+            user,
+            profile,
+          }),
         });
       });
     } catch (error) {
@@ -141,6 +214,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       await ensureUserProfile(user.id);
+      const profile = await storage.getUserProfile(user.id);
 
       request.session.userId = user.id;
 
@@ -153,6 +227,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         res.status(200).json({
           user: toSafeUser(user),
+          access: getAccessStatus({
+            user,
+            profile,
+          }),
         });
       });
     } catch (error) {
@@ -178,6 +256,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       await ensureUserProfile(user.id);
+      const profile = await storage.getUserProfile(user.id);
 
       request.session.userId = user.id;
 
@@ -190,6 +269,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         res.status(201).json({
           user: toSafeUser(user),
+          access: getAccessStatus({
+            user,
+            profile,
+          }),
         });
       });
     } catch (error) {
@@ -249,13 +332,51 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       await ensureUserProfile(user.id);
+      const profile = await storage.getUserProfile(user.id);
 
       res.status(200).json({
         user: toSafeUser(user),
+        access: getAccessStatus({
+          user,
+          profile,
+        }),
       });
     } catch (error) {
       console.error("Get current user error:", error);
       res.status(500).json({ error: "Failed to fetch current user" });
+    }
+  });
+
+  app.get("/api/access/status", async (req: Request, res: Response) => {
+    const request = req as RequestWithSession;
+
+    try {
+      const userId = request.session?.userId;
+
+      if (!userId) {
+        res.status(401).json({ error: "Not authenticated" });
+        return;
+      }
+
+      const user = await storage.getUserById(userId);
+
+      if (!user) {
+        res.status(401).json({ error: "Not authenticated" });
+        return;
+      }
+
+      await ensureUserProfile(user.id);
+      const profile = await storage.getUserProfile(user.id);
+
+      res.status(200).json(
+        getAccessStatus({
+          user,
+          profile,
+        }),
+      );
+    } catch (error) {
+      console.error("Get access status error:", error);
+      res.status(500).json({ error: "Failed to fetch access status" });
     }
   });
 

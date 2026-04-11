@@ -1,88 +1,72 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
-import { getAccessPhase } from "@/lib/access";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 type Props = {
   children: ReactNode;
 };
 
-function read(key: string) {
-  try {
-    return localStorage.getItem(key)?.toLowerCase() || "";
-  } catch {
-    return "";
-  }
-}
+const subscriberRoutes = ["/styles/traditional", "/styles/lettering"];
 
-function isSubscriber() {
-  const values = [
-    read("inkplan-subscription-tier"),
-    read("subscriptionTier"),
-    read("inkplan-tier"),
-    read("inkplan-subscription"),
-    read("inkplan-plan"),
-    read("plan"),
-    read("subscription"),
-  ];
+const premiumRoutes = [
+  "/styles/black-grey",
+  "/styles/japanese",
+  "/styles/chicano",
+  "/styles/japanese-realism",
+  "/styles/geometric",
+  "/styles/biomechanical",
+  "/styles/polynesian",
+  "/styles/color-realism",
+  "/styles/surrealism",
+  "/styles/watercolor",
+];
 
-  return values.some((v) =>
-    [
-      "subscriber",
-      "subscribed",
-      "active",
-      "paid",
-      "pro",
-      "monthly",
-      "yearly",
-    ].includes(v),
+function matchesRoute(location: string, routes: string[]) {
+  return routes.some(
+    (route) => location === route || location.startsWith(`${route}/`),
   );
 }
 
 export default function ProtectedRoute({ children }: Props) {
   const [location, setLocation] = useLocation();
+  const { isAuthenticated, isHydrated, access } = useAuth();
 
-  const phase = getAccessPhase();
-  const subscriber = isSubscriber();
+  const phase = access?.phase ?? "trial";
+  const requiresSubscriber = matchesRoute(location, subscriberRoutes);
+  const requiresPremium = matchesRoute(location, premiumRoutes);
 
-  // --- GLOBAL LOCK (no skipping app entry)
-  if (location !== "/" && !phase) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!isHydrated) return;
 
-  // --- ROUTE LEVEL GATING
-  const requiresSubscriptionRoutes = [
-    "/styles/traditional",
-    "/styles/lettering",
-    "/library/reference-packs/traditional",
-    "/library/reference-packs/lettering",
-  ];
+    if (!isAuthenticated) {
+      if (location !== "/") {
+        setLocation("/");
+      }
+      return;
+    }
 
-  const isRestricted = requiresSubscriptionRoutes.some((route) =>
-    location.includes(route),
-  );
+    if (requiresSubscriber && phase !== "subscribed") {
+      setLocation("/upgrade");
+      return;
+    }
 
-  if (isRestricted && !subscriber) {
-    setLocation("/upgrade");
-    return null;
-  }
+    if (requiresPremium) {
+      setLocation("/upgrade");
+    }
+  }, [
+    isAuthenticated,
+    isHydrated,
+    location,
+    phase,
+    requiresPremium,
+    requiresSubscriber,
+    setLocation,
+  ]);
 
-  // --- FUTURE PREMIUM LOCK
-  const premiumRoutes = [
-    "/styles/japanese",
-    "/styles/black-grey",
-    "/styles/chicano",
-    "/styles/geometric",
-  ];
-
-  const isPremiumRoute = premiumRoutes.some((route) =>
-    location.includes(route),
-  );
-
-  if (isPremiumRoute) {
-    setLocation("/upgrade");
-    return null;
-  }
+  if (!isHydrated) return null;
+  if (!isAuthenticated) return null;
+  if (requiresSubscriber && phase !== "subscribed") return null;
+  if (requiresPremium) return null;
 
   return <>{children}</>;
 }
