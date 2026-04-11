@@ -406,6 +406,20 @@ function buildGeneratedEntries(): CoachEntry[] {
 
 const foundationalEntries: CoachEntry[] = [
   {
+    id: "trial-materials",
+    minTier: "trial",
+    keywords: [
+      "materials",
+      "what do i need",
+      "what materials do i need",
+      "beginner supplies",
+      "what should i buy",
+      "tools to start",
+    ],
+    response:
+      "Start simple. You only need a sketchbook, pencils or iPad, and strong reference images from Pinterest or Google. Focus on drawing first. Do not worry about machines or tattoo equipment yet—build your fundamentals before stepping into that.",
+  },
+  {
     id: "trial-real-skin-boundary",
     minTier: "trial",
     keywords: [
