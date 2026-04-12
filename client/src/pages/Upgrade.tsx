@@ -1,21 +1,56 @@
+import { useState } from "react";
 import Layout from "@/components/Layout";
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   CheckCircle2,
   Crown,
   Lock,
-  Sparkles,
   ArrowRight,
   BadgeCheck,
 } from "lucide-react";
 
-export default function Upgrade() {
-  const [, setLocation] = useLocation();
+type CheckoutResponse = {
+  url?: string;
+  error?: string;
+};
 
-  function handleProCheckout() {
-    setLocation("/checkout/pro");
+export default function Upgrade() {
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleProCheckout() {
+    try {
+      setIsCheckingOut(true);
+      setErrorMessage("");
+
+      const response = await fetch("/api/billing/create-checkout-session", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          plan: "pro",
+        }),
+      });
+
+      const data = (await response.json()) as CheckoutResponse;
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Failed to start checkout");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to start checkout";
+      setErrorMessage(message);
+      console.error("Pro checkout error:", error);
+    } finally {
+      setIsCheckingOut(false);
+    }
   }
 
   return (
@@ -39,7 +74,6 @@ export default function Upgrade() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          {/* PRO */}
           <Card className="overflow-hidden rounded-3xl border border-primary/40 shadow-sm">
             <div className="border-b bg-primary/5 p-6">
               <div className="flex items-start justify-between gap-4">
@@ -75,14 +109,23 @@ export default function Upgrade() {
               <FeatureItem text="Traditional unlocked" />
               <FeatureItem text="Lettering unlocked" />
 
-              <Button className="w-full gap-2" onClick={handleProCheckout}>
-                Checkout Pro
+              {errorMessage ? (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+                  {errorMessage}
+                </div>
+              ) : null}
+
+              <Button
+                className="w-full gap-2"
+                onClick={handleProCheckout}
+                disabled={isCheckingOut}
+              >
+                {isCheckingOut ? "Redirecting..." : "Checkout Pro"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
 
-          {/* PREMIUM */}
           <Card className="overflow-hidden rounded-3xl border opacity-95">
             <div className="border-b bg-muted/30 p-6">
               <div className="flex items-start justify-between gap-4">

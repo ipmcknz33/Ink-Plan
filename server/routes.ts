@@ -365,11 +365,19 @@ export async function registerRoutes(app: Express): Promise<void> {
           return;
         }
 
+        const user = await storage.getUserById(request.session.userId);
+
+        if (!user) {
+          res.status(404).json({ error: "User not found" });
+          return;
+        }
+
         const origin = `${req.protocol}://${req.get("host")}`;
 
         const checkoutSession = await stripe.checkout.sessions.create({
           mode: "subscription",
           payment_method_types: ["card"],
+          customer_email: user.email,
           line_items: [
             {
               price_data: {
