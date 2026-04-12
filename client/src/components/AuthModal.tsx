@@ -181,41 +181,6 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     }
   };
 
-  const handleGuestLogin = async () => {
-    try {
-      setLoading(true);
-      setErrorMessage("");
-
-      const response = await fetch("/api/auth/guest", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      const data = await parseApiResponse(response);
-
-      if (!response.ok) {
-        throw new Error(data?.error || "Guest login failed");
-      }
-
-      const user = extractUser(data);
-      if (!user) {
-        throw new Error("No guest user returned");
-      }
-
-      await completeAuth(user);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Guest login failed";
-      setErrorMessage(message);
-      console.error("Guest login error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     setErrorMessage("");
@@ -328,16 +293,6 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               className="w-full border-white/10 bg-transparent text-white hover:bg-white/5"
             >
               Continue with Google
-            </Button>
-
-            <Button
-              type="button"
-              onClick={handleGuestLogin}
-              disabled={loading}
-              variant="outline"
-              className="w-full border-white/10 bg-transparent text-white hover:bg-white/5"
-            >
-              Continue as Guest
             </Button>
           </div>
         </div>

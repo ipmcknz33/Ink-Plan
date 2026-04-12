@@ -15,18 +15,7 @@ import {
 import { useAuth } from "@/components/providers/AuthProvider";
 
 function getUserLabel(email?: string | null) {
-  if (!email) return "Guest";
-
-  const normalized = email.toLowerCase();
-
-  if (
-    normalized.includes("guest") ||
-    normalized.startsWith("guest@") ||
-    normalized.startsWith("guest-")
-  ) {
-    return "Guest";
-  }
-
+  if (!email) return "InkPlan User";
   return email;
 }
 
@@ -87,7 +76,7 @@ export default function Sidebar() {
   }
 
   const userLabel = getUserLabel(user?.email);
-  const avatarLetter = user?.email?.charAt(0).toUpperCase() || "G";
+  const avatarLetter = user?.email?.charAt(0).toUpperCase() || "I";
 
   return (
     <aside className="hidden md:flex md:w-72 md:flex-col md:border-r md:border-border md:bg-card">

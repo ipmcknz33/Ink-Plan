@@ -90,8 +90,7 @@ function getAccessStatus(params: {
   if (subscriptionTier === "pro" || subscriptionTier === "premium") {
     phase = "subscribed";
   } else if (trialEndsAt) {
-    phase =
-      new Date(trialEndsAt).getTime() > Date.now() ? "trial" : "expired";
+    phase = new Date(trialEndsAt).getTime() > Date.now() ? "trial" : "expired";
   }
 
   return {
@@ -236,48 +235,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Failed to log in" });
-    }
-  });
-
-  app.post("/api/auth/guest", async (req: Request, res: Response) => {
-    const request = req as RequestWithSession;
-
-    try {
-      const guestEmail = `guest_${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2, 8)}@inkplan.local`;
-
-      const guestPassword = Math.random().toString(36).repeat(2);
-      const passwordHash = await bcrypt.hash(guestPassword, 10);
-
-      const user = await storage.createUser({
-        email: guestEmail,
-        passwordHash,
-      });
-
-      await ensureUserProfile(user.id);
-      const profile = await storage.getUserProfile(user.id);
-
-      request.session.userId = user.id;
-
-      request.session.save((saveError) => {
-        if (saveError) {
-          console.error("Guest session save error:", saveError);
-          res.status(500).json({ error: "Failed to create guest session" });
-          return;
-        }
-
-        res.status(201).json({
-          user: toSafeUser(user),
-          access: getAccessStatus({
-            user,
-            profile,
-          }),
-        });
-      });
-    } catch (error) {
-      console.error("Guest auth error:", error);
-      res.status(500).json({ error: "Failed to continue as guest" });
     }
   });
 
